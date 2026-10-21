@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTA Shield — The Wall for MCP Servers | AliceLabs</title>
+<meta name="description" content="UTA Shield is the provider-side firewall for MCP servers: identity, threat-intel gates, rate limits, DLP, x402 metering and audit — zero dependencies, 2-minute install. By AliceLabs LLC.">
+<meta property="og:title" content="UTA Shield — The Wall for MCP Servers">
+<meta property="og:description" content="Every MCP gateway protects consumers. UTA Shield protects the operator who publishes the server. Wrap your MCP server in 2 minutes — zero code changes.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://wall.utalabs.tech/">
+<link rel="canonical" href="https://wall.utalabs.tech/">
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#10161f; --panel2:#0d131c; --line:#1d2735;
+    --txt:#dbe4ee; --dim:#8494a7; --faint:#5b6b7e;
+    --cyan:#22d3ee; --green:#34d399; --red:#f87171; --amber:#fbbf24; --violet:#a78bfa;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--cyan);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(10,14,20,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:22px;height:58px}
+  .brand{font-weight:800;letter-spacing:.4px;color:#fff;font-size:15px}
+  .brand b{color:var(--cyan)}
+  .brand .co{color:var(--faint);font-weight:500;font-size:12px;margin-left:6px}
+  nav .links{margin-left:auto;display:flex;gap:18px;font-size:13.5px}
+  nav .links a{color:var(--dim)} nav .links a:hover{color:#fff;text-decoration:none}
+  .lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:12px;font-family:var(--mono)}
+  .lang button{background:transparent;color:var(--dim);border:0;padding:5px 10px;cursor:pointer;font-family:var(--mono)}
+  .lang button.on{background:var(--cyan);color:#04121a;font-weight:700}
+  /* hero */
+  .hero{position:relative;padding:84px 0 66px;border-bottom:1px solid var(--line);
+    background:radial-gradient(900px 420px at 18% -8%,rgba(34,211,238,.13),transparent 60%),
+               radial-gradient(700px 380px at 88% 8%,rgba(52,211,153,.09),transparent 60%),
+               repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 72px);}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--green);
+    border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.07);padding:5px 12px;border-radius:99px;letter-spacing:.6px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green)}
+  h1{font-size:clamp(34px,5.4vw,58px);line-height:1.06;letter-spacing:-1.4px;margin:22px 0 18px;color:#fff;font-weight:850}
+  h1 em{font-style:normal;background:linear-gradient(92deg,var(--cyan),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:19px;color:var(--dim);max-width:760px}
+  .sub b{color:var(--txt)}
+  .cta{margin-top:30px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:700;font-size:15px;border:1px solid transparent}
+  .btn-primary{background:linear-gradient(92deg,var(--cyan),#0ea5b7);color:#04121a;box-shadow:0 6px 26px rgba(34,211,238,.28)}
+  .btn-primary:hover{filter:brightness(1.1);text-decoration:none}
+  .btn-ghost{border-color:var(--line);color:var(--txt);background:var(--panel)}
+  .btn-ghost:hover{border-color:var(--cyan);text-decoration:none}
+  .install{margin-top:26px;font-family:var(--mono);font-size:13.5px;color:var(--faint)}
+  .install code{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 16px;color:var(--green);font-size:13.5px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:44px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat b{display:block;font-size:21px;color:#fff;letter-spacing:-.4px}
+  .stat span{font-size:12px;color:var(--dim);font-family:var(--mono)}
+  /* sections */
+  section{padding:74px 0;border-bottom:1px solid var(--line)}
+  .sec-k{font-family:var(--mono);font-size:12px;letter-spacing:1.6px;color:var(--cyan);text-transform:uppercase}
+  h2{font-size:clamp(26px,3.4vw,38px);letter-spacing:-.8px;color:#fff;margin:12px 0 16px;font-weight:800}
+  h3{color:#fff;font-size:17px;margin-bottom:8px}
+  .lead{color:var(--dim);max-width:780px;font-size:17px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:36px}
+  @media(max-width:840px){.split{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .card h3 .tag{font-family:var(--mono);font-size:10.5px;padding:2.5px 8px;border-radius:99px;margin-left:8px;vertical-align:2px;letter-spacing:.5px}
+  .tag-yes{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+  .tag-part{background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.3)}
+  .tag-hook{background:rgba(167,139,250,.1);color:var(--violet);border:1px solid rgba(167,139,250,.3)}
+  .card p{color:var(--dim);font-size:14.5px}
+  .card.red{border-color:rgba(248,113,113,.35);background:linear-gradient(180deg,rgba(248,113,113,.06),var(--panel))}
+  .card.red h3{color:var(--red)}
+  .card.grn{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,rgba(52,211,153,.06),var(--panel))}
+  /* terminal */
+  .term{background:#070b11;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:30px}
+  .term .bar{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel2)}
+  .term .bar i{width:10px;height:10px;border-radius:50%;background:#1e2937}
+  .term .bar i:nth-child(1){background:#ef4444}.term .bar i:nth-child(2){background:#fbbf24}.term .bar i:nth-child(3){background:#22c55e}
+  .term pre{padding:18px;font-family:var(--mono);font-size:13px;line-height:1.75;overflow-x:auto;color:#9fb2c6}
+  .term .cmd{color:#fff}.term .ok{color:var(--green)}.term .bad{color:var(--red)}.term .warn{color:var(--amber)}.term .inf{color:var(--cyan)}
+  /* table */
+  table{width:100%;border-collapse:collapse;margin-top:30px;font-size:14.5px}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  td{padding:13px 14px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+  td:first-child{color:#fff;font-weight:600;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:99px;white-space:nowrap}
+  .p-ship{background:rgba(52,211,153,.12);color:var(--green)}
+  .p-hook{background:rgba(167,139,250,.12);color:var(--violet)}
+  /* case */
+  .case{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:30px}
+  .case .c{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .case .c b{color:#fff;font-size:15px}
+  .case .c p{color:var(--dim);font-size:13.5px;margin-top:6px}
+  /* ecosystem */
+  .eco{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:34px}
+  .eco .e{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .eco .e .n{font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .eco .e h3{margin:6px 0 6px;font-size:16.5px}
+  .eco .e p{color:var(--dim);font-size:13.5px}
+  /* pricing */
+  .price{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:34px}
+  .price .p{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;position:relative}
+  .price .p.hot{border-color:rgba(34,211,238,.5);background:linear-gradient(180deg,rgba(34,211,238,.07),var(--panel))}
+  .price .p .t{font-family:var(--mono);font-size:12px;color:var(--cyan);letter-spacing:1px}
+  .price .p .amt{font-size:30px;font-weight:850;color:#fff;margin:10px 0 2px;letter-spacing:-.6px}
+  .price .p .per{font-size:13px;color:var(--dim)}
+  .price .p ul{list-style:none;margin-top:16px}
+  .price .p li{font-size:13.5px;color:var(--dim);padding:5px 0 5px 22px;position:relative}
+  .price .p li:before{content:"→";position:absolute;left:0;color:var(--green);font-family:var(--mono)}
+  .foot-cta{margin-top:40px;text-align:center;color:var(--dim);font-size:15px}
+  footer{padding:44px 0 60px;color:var(--faint);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  footer a{color:var(--dim)}
+  .sep{flex:1}
+  /* i18n */
+  html[data-lang="es"] .rich-en{display:none}
+  html[data-lang="en"] .rich-es{display:none}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">UTA<b>·</b>SHIELD <span class="co">by AliceLabs</span></div>
+    <div class="links">
+      <a href="#problem" data-en="The gap" data-es="El hueco">The gap</a>
+      <a href="#layers" data-en="Layers" data-es="Capas">Layers</a>
+      <a href="#usecase" data-en="Use case" data-es="Caso de uso">Use case</a>
+      <a href="#case" data-en="Live intel" data-es="Intel real">Live intel</a>
+      <a href="#behind" data-en="Project" data-es="Proyecto">Project</a>
+      <a href="#pricing" data-en="Pricing" data-es="Precios">Pricing</a>
+    </div>
+    <div class="lang">
+      <button id="btn-en" class="on" onclick="setLang('en')">EN</button>
+      <button id="btn-es" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker"><span class="dot"></span><span data-en="PROVIDER-SIDE MCP SECURITY — v0.1.0 SHIPPED" data-es="SEGURIDAD MCP LADO-PROVEEDOR — v0.1.0 EN PRODUCCIÓN">PROVIDER-SIDE MCP SECURITY — v0.1.0 SHIPPED</span></span>
+    <h1 data-en="The wall for the other side of MCP." data-es="El muro para el otro lado de MCP.">The wall for the other side of MCP.</h1>
+    <p class="sub" data-en="Lasso, Mintive, Obot and agentgateway protect the <b>consumer</b> — the company whose employees connect agents to third-party servers. Nobody protects the <b>operator</b>: the SaaS that publishes an MCP server and exposes its database to every anonymous agent on the internet. <b>UTA Shield is the mirror side</b> — wrap YOUR server in 2 minutes and gain identity gates, threat-intel blocking, rate limits, DLP, x402-ready metering and a full audit trail. Zero code changes. Zero dependencies." data-es="Lasso, Mintive, Obot y agentgateway protegen al <b>consumidor</b> — la empresa cuyos empleados conectan agentes a servidores de terceros. Nadie protege al <b>operador</b>: el SaaS que publica un servidor MCP y expone su base de datos a cada agente anónimo de internet. <b>UTA Shield es el lado espejo</b> — envuelve TU servidor en 2 minutos y gana gates de identidad, bloqueo de threat-intel, rate limits, DLP, metering x402 y auditoría completa. Cero cambios de código. Cero dependencias.">
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/eddyflores100-lang/uta-shield" data-en="Get the code on GitHub" data-es="Obtener el código en GitHub">Get the code on GitHub</a>
+      <a class="btn btn-ghost" href="#pricing" data-en="Commercial licenses" data-es="Licencias comerciales">Commercial licenses</a>
+      <a class="btn btn-ghost" href="https://utalabs.tech" data-en="utalabs.tech ↗" data-es="utalabs.tech ↗">utalabs.tech ↗</a>
+    </div>
+    <div class="install"><code>$ npx uta-shield wrap --upstream http://localhost:3001 --port 8787</code></div>
+    <div class="stats">
+      <div class="stat"><b>28/28</b><span data-en="TESTS GREEN" data-es="TESTS VERDES">TESTS GREEN</span></div>
+      <div class="stat"><b>0</b><span data-en="DEPENDENCIES" data-es="DEPENDENCIAS">DEPENDENCIES</span></div>
+      <div class="stat"><b>19.8 kB</b><span data-en="NPM PACK SIZE" data-es="TAMAÑO NPM PACK">NPM PACK SIZE</span></div>
+      <div class="stat"><b>23</b><span data-en="LIVE IOCs BUNDLED" data-es="IOCs REALES INCLUIDOS">LIVE IOCs BUNDLED</span></div>
+      <div class="stat"><b>~12 h</b><span data-en="CAMPAIGN DOMAIN TAKEN DOWN" data-es="DOMINIO DE CAMPAÑA CAÍDO">CAMPAIGN DOMAIN TAKEN DOWN</span></div>
+      <div class="stat"><b>2 min</b><span data-en="FROM INSTALL TO PROTECTED" data-es="DE INSTALAR A PROTEGIDO">FROM INSTALL TO PROTECTED</span></div>
+    </div>
+  </div>
+</header>
+<!-- ===== PROBLEM ===== -->
+<section id="problem">
+  <div class="wrap">
+    <div class="sec-k" data-en="01 — The gap" data-es="01 — El hueco">01 — The gap</div>
+    <h2 data-en="Half the industry is experimenting with MCP. Almost nobody is protecting the server side." data-es="Media industria experimenta con MCP. Casi nadie protege el lado del servidor.">Half the industry is experimenting with MCP. Almost nobody is protecting the server side.</h2>
+    <div class="rich-en">
+      <p class="lead">Roughly half of organizations are already experimenting with MCP, yet only ~11% run it in production. Meanwhile thousands of MCP servers are publicly reachable — and several hundred have leaked credentials. The whole security category (Lasso, Mintive, Obot, Solo.io agentgateway, Cequence) grew on the <b>consumer side</b>: enterprises filtering what their agents may call. The operator who PUBLISHES a server has… nothing. UTA Shield exists to fill exactly that empty column.</p>
+    </div>
+    <div class="rich-es">
+      <p class="lead">Cerca de la mitad de las organizaciones ya experimenta con MCP, pero solo ~11% lo lleva a producción. Mientras tanto, miles de servidores MCP son alcanzables públicamente — y varios cientos han filtrado credenciales. Toda la categoría de seguridad (Lasso, Mintive, Obot, Solo.io agentgateway, Cequence) creció del <b>lado consumidor</b>: empresas filtrando qué pueden llamar sus agentes. El operador que PUBLICA un servidor tiene… nada. UTA Shield existe para llenar exactamente esa columna vacía.</p>
+    </div>
+    <div class="split">
+      <div class="card red">
+        <h3 data-en="Consumer side" data-es="Lado consumidor">Consumer side</h3>
+        <p data-en="“My employees' agents must not touch dangerous servers.”" data-es="“Los agentes de mis empleados no deben tocar servidores peligrosos.”">“My employees' agents must not touch dangerous servers.”</p>
+        <p data-en="Solved by: Lasso, Mintive, Obot, agentgateway, Cequence — a crowded, funded category." data-es="Lo resuelven: Lasso, Mintive, Obot, agentgateway, Cequence — categoría concurrida y financiada.">Solved by: Lasso, Mintive, Obot, agentgateway, Cequence — a crowded, funded category.</p>
+      </div>
+      <div class="card grn">
+        <h3 data-en="Operator side — UTA Shield" data-es="Lado operador — UTA Shield">Operator side — UTA Shield</h3>
+        <p data-en="“I publish an MCP server. Every anonymous agent on the internet hits my database, my tools, my quota — and I can't tell a customer from a threat.”" data-es="“Publico un servidor MCP. Cada agente anónimo de internet golpea mi base de datos, mis tools, mi cuota — y no puedo distinguir un cliente de una amenaza.”">“I publish an MCP server. Every anonymous agent on the internet hits my database, my tools, my quota — and I can't tell a customer from a threat.”</p>
+        <p data-en="Solved by: <b>uta-shield</b> — the first provider-side firewall, shipped as a 19.8 kB auditable package." data-es="Lo resuelve: <b>uta-shield</b> — el primer firewall lado-proveedor, entregado como un paquete auditable de 19.8 kB.">Solved by: <b>uta-shield</b> — the first provider-side firewall, shipped as a 19.8 kB auditable package.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LAYERS ===== -->
+<section id="layers">
+  <div class="wrap">
+    <div class="sec-k" data-en="02 — What it does" data-es="02 — Qué hace">02 — What it does</div>
+    <h2 data-en="Eight defensive layers between the internet and your server." data-es="Ocho capas defensivas entre internet y tu servidor.">Eight defensive layers between the internet and your server.</h2>
+    <div class="rich-en"><p class="lead">Honesty policy: this table marks exactly what ships in v0.1.0 and what is a design hook. No inflated claims — a security vendor that lies about coverage is worse than no vendor.</p></div>
+    <div class="rich-es"><p class="lead">Política de honestidad: esta tabla marca exactamente qué viene en v0.1.0 y qué es un hook de diseño. Sin inflar cifras — un vendedor de seguridad que miente sobre su cobertura es peor que ningún vendedor.</p></div>
+    <table>
+      <thead><tr><th data-en="Layer" data-es="Capa">Layer</th><th data-en="What it does" data-es="Qué hace">What it does</th><th data-en="Status" data-es="Estado">Status</th></tr></thead>
+      <tbody>
+        <tr><td>1 · Identity</td><td data-en="Agents declare themselves (x-agent-name / passport header); optional verification against /.well-known/agent.json; --require-identity to refuse anonymous calls." data-es="Los agentes se declaran (header x-agent-name / pasaporte); verificación opcional contra /.well-known/agent.json; --require-identity para rechazar llamadas anónimas.">Agents declare themselves (x-agent-name / passport header); optional verification against /.well-known/agent.json; --require-identity to refuse anonymous calls.</td><td><span class="pill p-ship">SHIPPED</span></td></tr>
+        <tr><td>2 · Reputation</td><td data-en="Per-agent score built from identity verdicts and behavior." data-es="Score por agente construido desde veredictos de identidad y comportamiento.">Per-agent score built from identity verdicts and behavior.</td><td><span class="pill p-hook">HOOK</span></td></tr>
+        <tr><td>3 · Threat-intel in/out</td><td data-en="IOC feed matching on domains, URLs, IPs, emails, hashes, wildcards and mutexes — applied to inbound tool args AND outbound responses." data-es="Matching de feed IOC sobre dominios, URLs, IPs, emails, hashes, wildcards y mutex — aplicado a los args entrantes Y a las respuestas salientes.">IOC feed matching on domains, URLs, IPs, emails, hashes, wildcards and mutexes — applied to inbound tool args AND outbound responses.</td><td><span class="pill p-ship">SHIPPED</span></td></tr>
+        <tr><td>4 · Rate limiting</td><td data-en="Token bucket per agent+tool with free/paid tiers — abuse gets 429 before it gets your database." data-es="Token bucket por agente+tool con tiers free/paid — el abuso recibe 429 antes que tu base de datos.">Token bucket per agent+tool with free/paid tiers — abuse gets 429 before it gets your database.</td><td><span class="pill p-ship">SHIPPED</span></td></tr>
+        <tr><td>5 · Billing / x402</td><td data-en="Per-call metering + x402-ready pricing manifest at GET /pricing; settlement plugs into the operator's payment layer." data-es="Metering por llamada + manifest de precios listo para x402 en GET /pricing; el settlement se conecta a la capa de pagos del operador.">Per-call metering + x402-ready pricing manifest at GET /pricing; settlement plugs into the operator's payment layer.</td><td><span class="pill p-ship">METERING</span></td></tr>
+        <tr><td>6 · DLP</td><td data-en="Emails, JWTs, AWS keys, API tokens, private keys and card numbers masked in responses — your API can't leak what it never emits." data-es="Emails, JWTs, llaves AWS, tokens de API, llaves privadas y tarjetas enmascarados en las respuestas — tu API no puede filtrar lo que nunca emite.">Emails, JWTs, AWS keys, API tokens, private keys and card numbers masked in responses — your API can't leak what it never emits.</td><td><span class="pill p-ship">SHIPPED</span></td></tr>
+        <tr><td>7 · Reverse drift</td><td data-en="Notify clients when your schema changes (breaks fewer agents, earns trust)." data-es="Notificar a los clientes cuando tu esquema cambia (menos agentes rotos, más confianza).">Notify clients when your schema changes (breaks fewer agents, earns trust).</td><td><span class="pill p-hook">HOOK</span></td></tr>
+        <tr><td>8 · Audit</td><td data-en="JSONL per decision — indicator + campaign recorded for triage, NEVER raw arguments. SIEM-grade hygiene." data-es="JSONL por decisión — indicador + campaña registrados para triage, NUNCA argumentos crudos. Higiene nivel SIEM.">JSONL per decision — indicator + campaign recorded for triage, NEVER raw arguments. SIEM-grade hygiene.</td><td><span class="pill p-ship">SHIPPED</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== USE CASE ===== -->
+<section id="usecase">
+  <div class="wrap">
+    <div class="sec-k" data-en="03 — Use case" data-es="03 — Caso de uso">03 — Use case</div>
+    <h2 data-en="You run a CRM-style MCP server. Here is your day one." data-es="Operas un servidor MCP tipo CRM. Así es tu día uno.">You run a CRM-style MCP server. Here is your day one.</h2>
+    <div class="rich-en">
+      <p class="lead">Your company publishes an MCP server that exposes contacts, pipelines and email history — the same data class Apollo.io exposes via mcp.apollo.io. Today any anonymous agent can hammer it, exfiltrate PII through it, or use it as a lookup oracle. With UTA Shield you wrap it once and the firewall answers all of it: who is calling (identity), what they may see (DLP), how fast they may call (rate limit), and whether they are known-bad (threat intel) — while the metering endpoint turns your API into a billable, x402-ready product.</p>
+    </div>
+    <div class="rich-es">
+      <p class="lead">Tu empresa publica un servidor MCP que expone contactos, pipelines e historial de email — la misma clase de datos que Apollo.io expone vía mcp.apollo.io. Hoy cualquier agente anónimo puede golpearlo, extraer PII a través de él, o usarlo como oráculo de consulta. Con UTA Shield lo envuelves una vez y el firewall responde todo: quién llama (identidad), qué puede ver (DLP), a qué velocidad puede llamar (rate limit) y si es conocido-malo (threat intel) — mientras el endpoint de metering convierte tu API en un producto facturable, listo para x402.</p>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <pre><span class="cmd">$ npx uta-shield wrap --upstream http://localhost:3001 --port 8787</span>
+<span class="ok">✓ shield up</span>  <span class="inf">:8787 → upstream :3001</span>   <span class="inf">GET /health · /pricing · /audit</span>
+
+<span class="cmd">$ an agent calls search_contacts { "q": "…" }</span>
+<span class="ok">ALLOW</span>  identity=copilot-cli  tier=free  23ms  metered → ledger.jsonl
+
+<span class="cmd">$ an agent replies with the fetched record…</span>
+<span class="warn">DLP</span>     2 emails masked, 1 AWS key blocked  <span class="inf">(response left the wall clean)</span>
+
+<span class="cmd">$ an agent calls search_contacts { "q": "gaganata.ink" }</span>
+<span class="bad">BLOCK_INTEL</span>  domain=gaganata.ink  role=C2  campaign=taikotalent-2026-10
+<span class="inf">evidence attached → the agent knows WHY it was blocked</span>
+
+<span class="cmd">$ same agent retries 40×/min</span>
+<span class="bad">429</span>     rate_limit  agent=anonymous  tool=search_contacts
+
+<span class="cmd">$ $ curl -s :8787/audit | tail -4</span>
+<span class="inf">{"ts":"…","decision":"BLOCK_INTEL","indicator":"gaganata.ink","campaign":"taikotalent-2026-10"}</span>
+<span class="inf">{"ts":"…","decision":"ALLOW","agent":"copilot-cli","tool":"search_contacts","ms":23}</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LIVE INTEL ===== -->
+<section id="case">
+  <div class="wrap">
+    <div class="sec-k" data-en="04 — Live intel, not promises" data-es="04 — Intel real, no promesas">04 — Live intel, not promises</div>
+    <h2 data-en="Your firewall ships with a real, documented phishing campaign." data-es="Tu firewall viene con una campaña de phishing real y documentada.">Your firewall ships with a real, documented phishing campaign.</h2>
+    <div class="rich-en">
+      <p class="lead">Most security products launch with an empty database. UTA Shield ships with campaign <b>taikotalent-2026-10</b>: a fake-recruiter malware operation that targeted open-source developers with “terminal-as-CAPTCHA” social engineering. AliceLabs operated the takedown — the phishing domain fell in ~12 hours after coordinated reports to 13 channels (AWS abuse case 179121234700301, registrar ticket NC-DFA-2100). The C2 infrastructure is still tracked live. Every IOC in the feed carries evidence and MITRE ATT&CK mapping, so a blocked agent can reason about WHY.</p>
+    </div>
+    <div class="rich-es">
+      <p class="lead">La mayoría de productos de seguridad arranca con base vacía. UTA Shield viene con la campaña <b>taikotalent-2026-10</b>: una operación de malware fake-recruiter que atacó a desarrolladores open-source con ingeniería social “terminal-as-CAPTCHA”. AliceLabs operó el takedown — el dominio de phishing cayó en ~12 horas tras reportes coordinados a 13 canales (caso abuso AWS 179121234700301, ticket registrar NC-DFA-2100). La infraestructura C2 sigue rastreada en vivo. Cada IOC del feed trae evidencia y mapeo MITRE ATT&CK, para que el agente bloqueado pueda razonar el PORQUÉ.</p>
+    </div>
+    <div class="case">
+      <div class="c"><b data-en="23 IOCs · 9 types" data-es="23 IOCs · 9 tipos">23 IOCs · 9 tipos</b><p data-en="Domains, URLs, IPs, sender email, stager URLs, SHA-256 payloads, wildcard path, mutex." data-es="Dominios, URLs, IPs, email emisor, URLs stager, SHA-256 de payloads, path wildcard, mutex.">Domains, URLs, IPs, sender email, stager URLs, SHA-256 payloads, wildcard path, mutex.</p></div>
+      <div class="c"><b>MITRE ATT&CK ×8</b><p>T1566.002 · T1656 · T1204.002 · T1059.004 · T1027 · T1071.001 · T1070.004 · T1583.001</p></div>
+      <div class="c"><b>~12 h</b><p data-en="From follow-up report to registrar clientHold — documented publicly." data-es="Desde el reporte de seguimiento al clientHold del registrar — documentado públicamente.">From follow-up report to registrar clientHold — documented publicly.</p></div>
+      <div class="c"><b>CC-BY-4.0</b><p data-en="Feed data open-source; the firewall is the product, the intelligence is open." data-es="Datos del feed open-source; el firewall es el producto, la inteligencia es abierta.">Feed data open-source; the firewall is the product, the intelligence is open.</p></div>
+    </div>
+    <div class="install"><a href="https://github.com/eddyflores100-lang/taikotalent-phishing-iocs" style="font-family:var(--mono);font-size:13px">github.com/eddyflores100-lang/taikotalent-phishing-iocs →</a></div>
+  </div>
+</section>
+
+<!-- ===== PROJECT BEHIND ===== -->
+<section id="behind">
+  <div class="wrap">
+    <div class="sec-k" data-en="05 — The project behind" data-es="05 — El proyecto detrás">05 — The project behind</div>
+    <h2 data-en="Not a weekend script — the security layer of the UTA stack." data-es="No es un script de fin de semana — es la capa de seguridad del stack UTA.">Not a weekend script — the security layer of the UTA stack.</h2>
+    <div class="rich-en">
+      <p class="lead">UTA Shield is built by <b>AliceLabs LLC</b> (Wyoming, USA), the company behind the Universal Trust Adapter program: the conformance tooling, the agent trust credentials and the agent-first marketplace infrastructure that today serves 71,000+ audited skills. The wall is the newest layer of that stack — the piece that lets agents and servers do business without trusting each other blindly. Everything below is live, installable and versioned today.</p>
+    </div>
+    <div class="rich-es">
+      <p class="lead">UTA Shield es construido por <b>AliceLabs LLC</b> (Wyoming, EE. UU.), la empresa detrás del programa Universal Trust Adapter: las herramientas de conformance, las credenciales de confianza de agentes y la infraestructura de marketplace agent-first que hoy sirve a más de 71,000 skills auditadas. El muro es la capa más nueva de ese stack — la pieza que permite que agentes y servidores hagan negocios sin confiar a ciegas. Todo lo de abajo está vivo, instalable y versionado hoy.</p>
+    </div>
+    <div class="eco">
+      <div class="e"><span class="n">npm · @marketnow/uta-conformance</span><h3>UTA — Universal Trust Adapter</h3><p data-en="Conformance suite for agent/servers: schema, interop and certification vectors. v1.4.0 live on npm." data-es="Suite de conformance para agentes/servidores: esquema, interop y vectores de certificación. v1.4.0 viva en npm.">Conformance suite for agent/servers: schema, interop and certification vectors. v1.4.0 live on npm.</p></div>
+      <div class="e"><span class="n">PyPI · alethech</span><h3>Alethech</h3><p data-en="Verifiable agent-memory protocol — append-only, evidence-backed memory agents can carry across sessions." data-es="Protocolo de memoria de agente verificable — append-only, con evidencia, que los agentes cargan entre sesiones.">Verifiable agent-memory protocol — append-only, evidence-backed memory agents can carry across sessions.</p></div>
+      <div class="e"><span class="n">marketnow.site</span><h3>MarketNow</h3><p data-en="Agent-first marketplace: 71,198 skills audited, agent-hire, m2m-checkout, Agent Trust Credentials (ATC) — all under MAP v1.1.0." data-es="Marketplace agent-first: 71,198 skills auditadas, agent-hire, m2m-checkout, Agent Trust Credentials (ATC) — todo bajo MAP v1.1.0.">Agent-first marketplace: 71,198 skills audited, agent-hire, m2m-checkout, Agent Trust Credentials (ATC) — all under MAP v1.1.0.</p></div>
+      <div class="e"><span class="n">this repo</span><h3>UTA Shield</h3><p data-en="The provider-side firewall + PhishGuard threat-intel MCP — the trust enforcement layer of the stack." data-es="El firewall lado-proveedor + PhishGuard threat-intel MCP — la capa de enforcement de confianza del stack.">The provider-side firewall + PhishGuard threat-intel MCP — the trust enforcement layer of the stack.</p></div>
+    </div>
+    <div class="install" style="text-align:center;margin-top:34px"><a class="btn btn-ghost" href="https://utalabs.tech" data-en="Explore the full stack at utalabs.tech ↗" data-es="Explora el stack completo en utalabs.tech ↗">Explore the full stack at utalabs.tech ↗</a></div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-k" data-en="06 — Licensing" data-es="06 — Licenciamiento">06 — Licensing</div>
+    <h2 data-en="Run it free. Pay when it becomes your product." data-es="Úsalo gratis. Paga cuando sea tu producto.">Run it free. Pay when it becomes your product.</h2>
+    <div class="rich-en"><p class="lead">The package is licensed for <b>use</b> (see the LICENSE file): free to run on your own infrastructure, including commercially — not to redistribute or resell as your own. Commercial tiers add managed intelligence and hands-on deployment. Payment in USD or USDC.</p></div>
+    <div class="rich-es"><p class="lead">El paquete se licencia <b>para uso</b> (ver el archivo LICENSE): gratis para correrlo en tu infraestructura, incluso comercialmente — no para redistribuirlo ni revenderlo como tuyo. Los tiers comerciales agregan inteligencia gestionada y despliegue asistido. Pago en USD o USDC.</p></div>
+    <div class="price">
+      <div class="p">
+        <div class="t" data-en="SELF-HOST" data-es="AUTO-ALOJADO">SELF-HOST</div>
+        <div class="amt" data-en="Free" data-es="Gratis">Free</div>
+        <div class="per" data-en="license for use, forever" data-es="licencia de uso, para siempre">license for use, forever</div>
+        <ul>
+          <li data-en="All shipped layers (identity, intel, limits, DLP, metering, audit)" data-es="Todas las capas entregadas (identidad, intel, límites, DLP, metering, auditoría)">All shipped layers (identity, intel, limits, DLP, metering, audit)</li>
+          <li data-en="Bundled campaign feed (taikotalent-2026-10, CC-BY-4.0 data)" data-es="Feed de campaña incluido (taikotalent-2026-10, datos CC-BY-4.0)">Bundled campaign feed (taikotalent-2026-10, CC-BY-4.0 data)</li>
+          <li data-en="Own infrastructure, own data" data-es="Tu infraestructura, tus datos">Own infrastructure, own data</li>
+        </ul>
+      </div>
+      <div class="p hot">
+        <div class="t">S7 — MANAGED FEED</div>
+        <div class="amt">$50<span style="font-size:15px;color:var(--dim)">/mes</span></div>
+        <div class="per" data-en="per organization" data-es="por organización">per organization</div>
+        <ul>
+          <li data-en="Updated campaign feed + webhook alerts" data-es="Feed de campañas actualizado + alertas webhook">Updated campaign feed + webhook alerts</li>
+          <li data-en="YARA rules for payload families" data-es="Reglas YARA para familias de payload">YARA rules for payload families</li>
+          <li data-en="Free for the first 100 ATC-holding agents" data-es="Gratis para los primeros 100 agentes con ATC">Free for the first 100 ATC-holding agents</li>
+        </ul>
+      </div>
+      <div class="p">
+        <div class="t">S6 — ASSESSMENT + PILOT</div>
+        <div class="amt">$1,000<span style="font-size:15px;color:var(--dim)"> + $100/mes/server</span></div>
+        <div class="per" data-en="hands-on with the AliceLabs team" data-es="manos a la obra con el equipo AliceLabs">hands-on with the AliceLabs team</div>
+        <ul>
+          <li data-en="Security audit of your MCP server" data-es="Auditoría de seguridad de tu servidor MCP">Security audit of your MCP server</li>
+          <li data-en="Deployed pilot: identity + intel + audit live" data-es="Piloto desplegado: identidad + intel + auditoría en vivo">Deployed pilot: identity + intel + audit live</li>
+          <li data-en="Written report + hardening roadmap" data-es="Reporte escrito + roadmap de endurecimiento">Written report + hardening roadmap</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-cta">
+      <span data-en="Talk to us:" data-es="Habla con nosotros:">Talk to us:</span>
+      <a href="mailto:support@alicelabs.energy">support@alicelabs.energy</a>
+      · <a href="mailto:contacto@alicelabs.site">contacto@alicelabs.site</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AliceLabs LLC — Wyoming, USA</span>
+    <a href="https://utalabs.tech">utalabs.tech</a>
+    <a href="https://wall.utalabs.tech">wall.utalabs.tech</a>
+    <a href="https://marketnow.site">marketnow.site</a>
+    <a href="https://github.com/eddyflores100-lang/uta-shield">GitHub</a>
+    <span class="sep"></span>
+    <span data-en="Licensed for use — see LICENSE" data-es="Licencia de uso — ver LICENSE">Licensed for use — see LICENSE</span>
+  </div>
+</footer>
+
+<script>
+  function setLang(l){
+    document.documentElement.setAttribute('data-lang',l);
+    document.querySelectorAll('[data-en]').forEach(el=>{
+      const v = el.getAttribute('data-'+l);
+      if(v!==null && !el.classList.contains('rich-en') && !el.classList.contains('rich-es')) el.innerHTML=v;
+    });
+    document.getElementById('btn-en').classList.toggle('on',l==='en');
+    document.getElementById('btn-es').classList.toggle('on',l==='es');
+    try{localStorage.setItem('utas-lang',l)}catch(e){}
+  }
+  (function(){let l='en';try{l=localStorage.getItem('utas-lang')||((navigator.language||'').startsWith('es')?'es':'en')}catch(e){}
+    if(l&&l!=='en')setLang(l);})();
+</script>
+</body>
+</html>

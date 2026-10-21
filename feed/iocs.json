@@ -1,0 +1,50 @@
+{
+  "feed_schema": "pg/1",
+  "version": "2026.10.21",
+  "generated": "2026-10-21",
+  "license": "IOC data CC-BY-4.0 from github.com/eddyflores100-lang/taikotalent-phishing-iocs (see refs)",
+  "campaigns": [
+    {
+      "id": "taikotalent-2026-10",
+      "name": "Taiko fake-recruiter phishing (terminal-as-CAPTCHA)",
+      "first_seen": "2026-09-27",
+      "summary": "Campaign impersonating Taiko (taiko.xyz, Ethereum rollup) with fake job offers to open-source developers. 'Anti-bot check with Terminal' portal tricked victims into executing a bash stager themselves. SPF/DKIM/DMARC passed — authentication proved control of an 8-day-old domain, not reputation.",
+      "status": {
+        "taikotalent.xyz": "DOWN 2026-10-10 02:39 UTC (registrar clientHold, ticket NC-DFA-2100; NXDOMAIN verified 2026-10-15)",
+        "c2": "LIVE as of 2026-10-21 (api.gaganata.ink / api.fallgganata.ink behind Cloudflare — abuse reports in progress)",
+        "aws_case": "179121234700301"
+      },
+      "mitre": ["T1566.002", "T1656", "T1204.002", "T1059.004", "T1027", "T1071.001", "T1070.004", "T1583.001"],
+      "iocs": [
+        { "type": "domain", "value": "taikotalent.xyz", "context": "phishing portal + payload host (registered 2026-09-27, Namecheap)" },
+        { "type": "domain", "value": "hr.taikotalent.xyz", "context": "sending subdomain (DKIM d=, MX -> AWS SES inbound sa-east-1)" },
+        { "type": "domain", "value": "gaganata.ink", "context": "C2 (Namecheap, Cloudflare-fronted)" },
+        { "type": "domain", "value": "fallgganata.ink", "context": "C2 backup" },
+        { "type": "url", "value": "https://taikotalent.xyz/", "context": "private-invitation portal (Ref-code gated)" },
+        { "type": "url", "value": "https://taikotalent.xyz/verify_m", "context": "macOS/Linux bash stager (49,916 B) - LIVE 2026-10-09" },
+        { "type": "url", "value": "https://taikotalent.xyz/verify_w", "context": "Windows payload (v.cmd launcher)" },
+        { "type": "url", "value": "https://api.gaganata.ink/guard-launcher-result", "context": "install-status C2 beacon" },
+        { "type": "url", "value": "https://api.fallgganata.ink", "context": "C2 fallback" },
+        { "type": "ip", "value": "23.249.215.58", "context": "Amazon SES sending IP (sa-east-1, via Resend)" },
+        { "type": "ip", "value": "193.160.32.10", "context": "payload host (Shock Hosting, US-SHOCK1-20191118)" },
+        { "type": "ip", "value": "172.67.196.60", "context": "Cloudflare edge in front of C2" },
+        { "type": "email-addr", "value": "josephquintana@hr.taikotalent.xyz", "context": "fake recruiter identity" },
+        { "type": "email-subject", "value": "Engineering opening - Taiko", "context": "lure" },
+        { "type": "filename", "value": "verify_m", "context": "stager download" },
+        { "type": "filename", "value": "verify_w", "context": "windows payload download" },
+        { "type": "filename", "value": "v.cmd", "context": "windows launcher" },
+        { "type": "filepath", "value": "/var/tmp/.kdm.*", "context": "second stage (base64-decoded, self-deleting)" },
+        { "type": "mutex/process-name", "value": "deepfake_guard", "context": "stager process name" },
+        { "type": "sha256", "value": "c7c22e322c17bda8198257342d4034af6250a5c433242461b870879ba9aa285d", "context": "verify_m stager (identical 10-05 quarantine & 10-09 live fetch)" },
+        { "type": "sha256", "value": "84d94746ea1e4642e00bbd6250f8e4fabfeff66b76acd040bb2219412195d564", "context": "original phishing email raw" },
+        { "type": "sha256", "value": "3a5bb258d76a048d0c3ff8c3671410998ef548968e1ea674b5a9dd367fa3bcf3", "context": "original .eml attachment" },
+        { "type": "sha256", "value": "d83bc2d16a1b91e839d8d9ec440b79fe09e73c92bd2a151b843c0182cd604a1c", "context": "17-page forensic report PDF" }
+      ],
+      "refs": [
+        "https://github.com/eddyflores100-lang/taikotalent-phishing-iocs",
+        "https://namecheap.com (ticket NC-DFA-2100)",
+        "AWS case 179121234700301"
+      ]
+    }
+  ]
+}

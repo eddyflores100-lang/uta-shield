@@ -1,0 +1,30 @@
+{
+  "name": "uta-shield",
+  "version": "0.1.0",
+  "description": "Provider-side firewall for MCP servers + bundled PhishGuard threat-intel MCP server. Zero dependencies, zero supply-chain surface.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "bin": { "uta-shield": "./bin/cli.mjs" },
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./feed": "./src/feed.mjs",
+    "./shield": "./src/shield.mjs",
+    "./mcp": "./src/mcp/server.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "demo": "node demo/run-demo.mjs",
+    "verify-feed": "node bin/cli.mjs verify-feed feed/iocs.json"
+  },
+  "keywords": [
+    "mcp", "modelcontextprotocol", "firewall", "security", "threat-intel",
+    "phishing", "ioc", "ai-agents", "x402", "uta", "alicelabs"
+  ],
+  "author": "AliceLabs LLC <support@alicelabs.energy>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eddyflores100-lang/uta-shield.git"
+  }
+}

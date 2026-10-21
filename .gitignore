@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.log
+ledger.jsonl
+audit.jsonl
+.DS_Store
