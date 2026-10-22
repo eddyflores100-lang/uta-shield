@@ -142,7 +142,7 @@ test("gateOut redacts IOCs by default (outbound policy: redact)", () => {
 test("health discloses the honest posture", () => {
   const s = mk({ identity: { keys: { a: "b" } }, outboundPolicy: "block" });
   const h = s.health();
-  assert.equal(h.version, "0.2.0");
+  assert.equal(h.version, "0.2.1");
   assert.equal(h.outbound_policy, "block");
   assert.equal(h.identity.mode, "hmac-verified");
 });

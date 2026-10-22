@@ -1,7 +1,9 @@
-// uta-shield v0.2.0 — hardened proxy end-to-end tests (real HTTP).
+// uta-shield v0.2.1 — hardened proxy end-to-end tests (real HTTP).
 // Covers the v0.1.0 audit gaps: body size limits, upstream timeouts,
 // MCP method policy, safe error messages, identity enforcement e2e,
 // outbound policy e2e, and rate-limit bypass attempts.
+// v0.2.1 (second external review): authenticated /audit (or disabled),
+// exact core verdict in the x-uta-shield header (policy=log → OUTBOUND_INTEL).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -256,11 +258,71 @@ test("health endpoint discloses the actual security posture", async () => {
     const r = await fetch(stack.url + "/health");
     assert.equal(r.status, 200);
     const h = await r.json();
-    assert.equal(h.version, "0.2.0");
+    assert.equal(h.version, "0.2.1");
     assert.equal(h.outbound_policy, "block");
     assert.equal(h.identity.mode, "hmac-verified");
     assert.equal(h.proxy.max_body_bytes, 4096);
     assert.equal(h.proxy.upstream_timeout_ms, 1234);
     assert.ok(Array.isArray(h.proxy.methods_allowed));
+    assert.equal(h.proxy.audit_admin_required, false, "no admin token → /audit disabled");
+  } finally { await stack.stop(); }
+});
+
+// ── v0.2.1: /audit is operator telemetry — authenticated or disabled ──
+
+test("audit fail-closed: no admin token configured → GET /audit is 404 and leaks nothing", async () => {
+  const stack = await startStack({ shieldOpts: { identity: { keys: KEYS } } });
+  try {
+    // generate audit traffic that must NOT leak
+    const r0 = await signedFetch(stack.url, rpc("tools/list", null, 40));
+    await r0.arrayBuffer();
+    const r = await fetch(stack.url + "/audit");
+    assert.equal(r.status, 404);
+    const body = await r.text();
+    assert.ok(!body.includes("helper-bot"), "agent names must not leak");
+    assert.ok(!body.includes("ALLOW_VERIFIED"), "audit records must not leak");
+    // every attempt is itself audited for the operator's SIEM
+    assert.ok(stack.shield.audit.last(5).some(rec => rec.verdict === "AUDIT_DISABLED"));
+  } finally { await stack.stop(); }
+});
+
+test("audit authentication: valid x-uta-admin → 200 with records; missing/wrong token → 401", async () => {
+  const stack = await startStack({
+    shieldOpts: { identity: { keys: KEYS } },
+    proxyOpts: { adminToken: "admin-secret-0123456789" }
+  });
+  try {
+    const r0 = await signedFetch(stack.url, rpc("tools/list", null, 41));
+    await r0.arrayBuffer();
+
+    const missing = await fetch(stack.url + "/audit");
+    assert.equal(missing.status, 401);
+    assert.equal(missing.headers.get("x-uta-shield"), "AUDIT_DENIED");
+
+    const wrong = await fetch(stack.url + "/audit", { headers: { "x-uta-admin": "wrong-token" } });
+    assert.equal(wrong.status, 401);
+
+    const ok = await fetch(stack.url + "/audit", { headers: { "x-uta-admin": "admin-secret-0123456789" } });
+    assert.equal(ok.status, 200);
+    const records = await ok.json();
+    assert.ok(Array.isArray(records) && records.length >= 1, "operator sees the audit trail");
+    assert.ok(records.some(rec => rec.verdict === "ALLOW_VERIFIED"), "verified traffic is in the trail");
+    // failed admin attempts are audited too
+    assert.ok(stack.shield.audit.last(5).some(rec => rec.verdict === "AUDIT_DENIED"));
+  } finally { await stack.stop(); }
+});
+
+test("outbound log e2e: policy=log passes content through but header reports OUTBOUND_INTEL (exact core verdict, not OUT_OK/OUT_REDACTED)", async () => {
+  const stack = await startStack({ shieldOpts: { identity: { keys: KEYS }, outboundPolicy: "log" } });
+  try {
+    const r = await signedFetch(stack.url, rpc("tools/call", { name: "dirty_lookup", arguments: {} }, 42));
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("x-uta-shield"), "OUTBOUND_INTEL");
+    const text = await r.text();
+    assert.ok(text.includes("gaganata.ink"), "policy=log is explicit documented passthrough");
+    // the decision is audited with evidence
+    const rec = stack.shield.audit.last(5).find(rec => rec.verdict === "OUTBOUND_INTEL");
+    assert.ok(rec, "OUTBOUND_INTEL decision is audited");
+    assert.ok(rec.findings.some(f => f.campaign === "taikotalent-2026-10"));
   } finally { await stack.stop(); }
 });

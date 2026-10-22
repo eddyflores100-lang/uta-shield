@@ -32,7 +32,7 @@ export function createShield(options = {}) {
     audit: options.audit ?? {},                            // layer 8 ({file})
     billing: options.billing ?? { enabled: false },        // layer 5
     name: options.name ?? "uta-shield",
-    version: options.version ?? "0.2.0"
+    version: options.version ?? "0.2.1"
   };
 
   const audit = new AuditLog(opts.audit);
@@ -166,13 +166,18 @@ export function createShield(options = {}) {
       result.dlp.push(...jd.findings);
     }
 
-    // Verdict: OUT_BLOCKED | OUT_REDACTED | OUTBOUND_INTEL (log) | OUT_OK
+    // Verdict: OUT_BLOCKED | OUT_REDACTED | OUTBOUND_INTEL (log) | OUT_MASKED | OUT_OK
     let verdict = "OUT_OK";
     let reason = "outbound clean";
     if (result.intel.hits.length && opts.outboundPolicy === "block") { /* unreachable; handled above */ }
     else if (result.intel.hits.length && opts.outboundPolicy === "redact") { verdict = "OUT_REDACTED"; reason = "IOC occurrences neutralized in outbound response"; }
     else if (result.intel.hits.length && opts.outboundPolicy === "log") { verdict = "OUTBOUND_INTEL"; reason = "response contains known-bad indicator; policy=log passed it through"; }
     if (result.dlp.length) { verdict = verdict === "OUT_OK" ? "OUT_MASKED" : verdict; reason = result.dlp.length && verdict === "OUT_OK" ? "secrets masked in outbound response" : reason; }
+
+    // v0.2.1: the verdict travels with the result so every consumer (proxy
+    // header, MCP wrapper, tests) classifies the response EXACTLY as the core
+    // did — no recomputation, no drift between layers.
+    result.verdict = verdict;
 
     audit.log({ verdict, agent, tool, reason, findings: evidence(), redacted: result.redacted, dlp: result.dlp });
     return result;

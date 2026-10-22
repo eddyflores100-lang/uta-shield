@@ -1,4 +1,4 @@
-// uta-shield — hardened HTTP proxy handler (v0.2.0).
+// uta-shield — hardened HTTP proxy handler (v0.2.1).
 // Extracted from bin/cli.mjs so the exact production path is testable.
 //
 // Hardening (v0.2.0):
@@ -11,21 +11,41 @@
 //     audit log, never to the client; stack traces never leave the process
 //   - client IP: socket remoteAddress, or X-Forwarded-For only with --trust-proxy
 //   - forwards the EXACT raw body bytes upstream (signature integrity)
+//
+// Hardening (v0.2.1, second external review):
+//   - /audit is AUTHENTICATED (x-uta-admin header, timing-safe compare) and
+//     DISABLED (404) when no adminToken is configured — fail-closed. The
+//     audit trail contains IOCs, agent names and tool usage; it is operator
+//     telemetry, never public data.
+//   - the outbound `x-uta-shield` flag is the verdict computed by the core
+//     (out.verdict) — policy=log now correctly reports OUTBOUND_INTEL instead
+//     of a recomputed (and wrong) OUT_REDACTED/OUT_OK.
+
+import { timingSafeEqual } from "node:crypto";
 
 const DEFAULT_METHODS = ["initialize", "notifications/initialized", "ping", "tools/list", "tools/call"];
+
+// Timing-safe token compare over the raw bytes of both tokens — no external
+// crypto dependency, constant-time regardless of where the first diff is.
+function tokensEqual(a, b) {
+  const ba = Buffer.from(String(a), "utf8");
+  const bb = Buffer.from(String(b), "utf8");
+  return ba.length === bb.length && timingSafeEqual(ba, bb);
+}
 
 function json(res, status, obj, headers = {}) {
   res.writeHead(status, { "content-type": "application/json", ...headers });
   res.end(JSON.stringify(obj));
 }
 
-export function createProxyHandler({ shield, upstream, limits = {}, allowMethods = null, trustProxy = false } = {}) {
+export function createProxyHandler({ shield, upstream, limits = {}, allowMethods = null, trustProxy = false, adminToken = null } = {}) {
   if (!shield || typeof shield.gateIn !== "function") throw new Error("createProxyHandler requires a shield instance");
   const lim = {
     maxBodyBytes: Math.max(1, Number(limits.maxBodyBytes ?? 1048576)),
     upstreamTimeoutMs: Math.max(1, Number(limits.upstreamTimeoutMs ?? 30000))
   };
   const allowed = allowMethods === "*" ? null : new Set(allowMethods || DEFAULT_METHODS);
+  const admin = adminToken ? String(adminToken) : null; // null = /audit disabled (fail-closed)
 
   function clientIp(req) {
     if (trustProxy) {
@@ -42,14 +62,32 @@ export function createProxyHandler({ shield, upstream, limits = {}, allowMethods
   }
 
   return async function handler(req, res) {
-    // ── management endpoints (GET, unauthenticated but read-only metadata) ──
+    // ── management endpoints (GET) ──
+    // /health and /pricing: read-only posture metadata, safe to expose.
+    // /audit: OPERATOR TELEMETRY — authenticated or disabled (v0.2.1).
+    if (req.method === "GET" && req.url === "/audit") {
+      const ip = clientIp(req);
+      if (!admin) {
+        // Fail-closed: no admin token configured → the endpoint does not exist
+        // publicly. Answer 404 without leaking records or configuration state.
+        shield.audit.log({ verdict: "AUDIT_DISABLED", ip, reason: "GET /audit while no admin token is configured — endpoint disabled (fail-closed)" });
+        return json(res, 404, { jsonrpc: "2.0", id: null, error: { code: -32601, message: "not found" } });
+      }
+      const got = req.headers["x-uta-admin"];
+      if (typeof got !== "string" || !got.length || !tokensEqual(got, admin)) {
+        shield.audit.log({ verdict: "AUDIT_DENIED", ip, reason: "GET /audit with missing or invalid x-uta-admin token" });
+        return json(res, 401, { jsonrpc: "2.0", id: null, error: { code: -32001, message: "admin authentication required (x-uta-admin)" } }, { "x-uta-shield": "AUDIT_DENIED" });
+      }
+      return json(res, 200, shield.audit.last(20));
+    }
     if (req.method === "GET" && (req.url === "/health" || req.url === "/")) {
       const health = shield.health();
       health.proxy = {
         max_body_bytes: lim.maxBodyBytes,
         upstream_timeout_ms: lim.upstreamTimeoutMs,
         methods_allowed: allowed ? [...allowed] : "*",
-        trust_proxy: !!trustProxy
+        trust_proxy: !!trustProxy,
+        audit_admin_required: !!admin
       };
       return json(res, 200, health);
     }
@@ -141,10 +179,11 @@ export function createProxyHandler({ shield, upstream, limits = {}, allowMethods
       if (out.blocked) {
         return json(res, 403, { jsonrpc: "2.0", id, error: out.error }, { "x-uta-shield": "OUT_BLOCKED" });
       }
-      const flag = out.dlp.length ? "OUT_MASKED" : (out.intel.hits.length ? "OUT_REDACTED" : "OUT_OK");
+      // v0.2.1: single source of truth — the core verdict travels in out.verdict
+      // (OUT_OK | OUT_MASKED | OUT_REDACTED | OUTBOUND_INTEL). No recomputation.
       res.writeHead(r.status, {
         "content-type": r.headers.get("content-type") || "application/json",
-        "x-uta-shield": flag
+        "x-uta-shield": out.verdict || "OUT_OK"
       });
       return res.end(out.text);
     } catch (e) {

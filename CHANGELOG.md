@@ -1,5 +1,44 @@
 # Changelog — uta-shield
 
+## 0.2.1 — second-review hardening (2026-10-23)
+
+Direct response to a second external review of the v0.2.0 change set. Two real
+gaps remained; both are now closed and covered by dedicated tests (78 → 81).
+
+### Fixed (second-review findings)
+
+- **`/audit` was unauthenticated** (`src/proxy.mjs`): the proxy served the last
+  20 audit records — IOCs, agent names, tools, decisions — to any GET.
+  → NEW: `/audit` is operator telemetry. With no admin token configured the
+  endpoint answers **404 (fail-closed: it does not exist publicly)**. With
+  `--admin-token` / `UTA_SHIELD_ADMIN` (≥16 chars) it requires an `x-uta-admin`
+  header compared in constant time (`timingSafeEqual`). Every denied or
+  disabled-access attempt is itself audited (`AUDIT_DISABLED` / `AUDIT_DENIED`).
+  `/health` discloses the posture via `proxy.audit_admin_required`.
+
+- **Outbound header could misclassify** (`src/proxy.mjs` + `src/shield.mjs`):
+  the proxy recomputed the `x-uta-shield` flag from DLP/intel counts, so with
+  `policy=log` a response carrying a live C2 indicator was flagged as if it had
+  been redacted. → NEW: `gateOut()` now returns its exact verdict
+  (`OUT_OK | OUT_MASKED | OUT_REDACTED | OUTBOUND_INTEL`) in `result.verdict`
+  and the proxy forwards it verbatim — single source of truth, zero drift
+  between the core decision and what the client sees. `policy=log` is honest:
+  header says `OUTBOUND_INTEL`, never a clean-looking `OUT_OK`.
+
+### Changed
+
+- `demo/run-demo.mjs` now starts the shield with `--admin-token` and
+  demonstrates the new posture: `/audit` without credentials → `401`, wrong
+  token → `401` (audited as `AUDIT_DENIED`), correct token → `200` + trail.
+- Version alignment across `package.json`, CLI banner, MCP `serverInfo`,
+  shield default.
+
+### Tests
+
+- 81/81 green (`node --test test/*.test.mjs`, Node v24.21.0):
+  `proxy.test.mjs` +3 — audit fail-closed 404 leak-proof, audit auth
+  401/200 paths, `policy=log` e2e with exact `OUTBOUND_INTEL` header.
+
 ## 0.2.0 — security hardening release (2026-10-23)
 
 Direct response to an external code audit of v0.1.0. Every finding below was

@@ -27,9 +27,9 @@ npx uta-shield mcp
 cat > keys.json <<'EOF'
 { "recruiter-agent": "generate-a-long-random-secret", "auditor-agent": "another-secret" }
 EOF
-npx uta-shield wrap --upstream http://localhost:3001 --port 8787 --keys-file keys.json
+npx uta-shield wrap --upstream http://localhost:3001 --port 8787 --keys-file keys.json --admin-token "$(openssl rand -hex 24)"
 #    → agents now talk to :8787; your server stays at :3001
-#    GET /health · GET /pricing (x402-ready) · GET /audit
+#    GET /health · GET /pricing (x402-ready) · GET /audit (admin-only: x-uta-admin header)
 
 # 5. See it all live
 node demo/run-demo.mjs
@@ -74,15 +74,17 @@ const sig = createHmac("sha256", secret).update(`${agent}|${ts}|${bodyHash}`).di
 
 Honesty policy: this README marks exactly what ships. Layers 2 and 7 are design hooks — no inflated claims.
 
-## Proxy hardening (v0.2.0)
+## Proxy hardening (v0.2.1)
 
 | Control | Default | Flag |
 |---|---|---|
 | Startup fail-closed | refuses to run without `--keys-file` or `--allow-anonymous` | — |
+| **`/audit` authenticated** | **disabled (404) without a token; with one, requires `x-uta-admin` (timing-safe compare) — the trail holds IOCs and agent names, it is operator telemetry, never public** | `--admin-token SECRET` / `UTA_SHIELD_ADMIN` (≥16 chars) |
 | Request body cap | 1 MiB (declared **and** streamed — header spoofing doesn't help) | `--max-body-bytes N` |
 | Upstream timeout | 30 s → `504`, fixed message | `--upstream-timeout-ms N` |
 | MCP method allow-list | `initialize`, `notifications/initialized`, `ping`, `tools/list`, `tools/call` → everything else `403 METHOD_DENIED` | `--allow-methods "a,b" \| "*"` |
 | Safe errors | upstream failures return fixed messages; detail goes to the audit log, never the client | — |
+| Exact outbound verdict | the `x-uta-shield` response flag is the core verdict (`OUT_OK`/`OUT_MASKED`/`OUT_REDACTED`/`OUTBOUND_INTEL`) — no recomputation, `policy=log` reports `OUTBOUND_INTEL`, never a clean-looking `OUT_OK` | — |
 | Raw-body forwarding | exact bytes upstream (signature integrity) | — |
 | Per-IP rate ceiling | 120 req/min, burst 60 | `--` config via API |
 | Header timeouts | headers 10 s, request timeout = upstream + 5 s | automatic |
@@ -122,14 +124,15 @@ Contact: AliceLabs LLC — support@alicelabs.energy
 ## Test (reproducible)
 
 ```bash
-node --test test/*.test.mjs   # 78 tests: identity/HMAC, ACL, outbound policies, DLP formats,
+node --test test/*.test.mjs   # 81 tests: identity/HMAC, ACL, outbound policies, DLP formats,
+                             # authenticated /audit, exact verdict propagation, proxy limits
                               # two-tier rate limits, hardened proxy e2e (413/502/504/403/429),
                               # feed matching, MCP protocol
 npm run verify-feed           # feed schema validation
 npm run demo                  # end-to-end with signed traffic
 ```
 
-Test results for v0.2.0: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, full runner summary).
+Test results for v0.2.1: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, full runner summary).
 
 ## Migration v0.1.0 → v0.2.0 (breaking)
 
@@ -137,5 +140,9 @@ Test results for v0.2.0: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, 
 - Rate limits for unverified callers are keyed by IP; declared agent names no longer create per-agent buckets.
 - `gateOut` default behavior changed from pass-through to `redact`. Set `outboundPolicy:"log"` for v0.1.0 behavior.
 - New verdicts in the audit stream: `ALLOW_VERIFIED`, `REJECT_AUTH`, `REJECT_FORBIDDEN`, `OUT_REDACTED`, `OUT_BLOCKED`, `UPSTREAM_ERROR`.
+
+## Migration v0.2.0 → v0.2.1 (breaking)
+
+- **`GET /audit` no longer works without credentials.** Without `--admin-token` (or `UTA_SHIELD_ADMIN`) it answers **404**; with a token it requires the `x-uta-admin` header. Dashboards that scraped `/audit` anonymously must present the operator token. The response flag `x-uta-shield` is now the exact core verdict — `policy=log` users will see `OUTBOUND_INTEL` instead of the previously mislabeled flag.
 
 Licensed for use — see [LICENSE](LICENSE) (license for use / licencia de uso). © 2026 AliceLabs LLC. Commercial exceptions (white label, OEM, redistribution, managed service): support@alicelabs.energy

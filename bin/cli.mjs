@@ -19,7 +19,7 @@ import { createShield, OUTBOUND_POLICIES } from "../src/shield.mjs";
 import { createProxyHandler } from "../src/proxy.mjs";
 import { startStdio } from "../src/mcp/server.mjs";
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUNDLED_FEED = join(__dirname, "..", "feed", "iocs.json");
 
@@ -89,7 +89,8 @@ try {
                --acl-file acl.json          per-tool authorization per agent
   outbound     --outbound-policy block|redact|log      (default: redact)
   proxy limits --max-body-bytes N | --upstream-timeout-ms N | --allow-methods "m1,m2" | "*"
-               --trust-proxy                             (honor X-Forwarded-For)`);
+               --trust-proxy                             (honor X-Forwarded-For)
+  admin        --admin-token SECRET | UTA_SHIELD_ADMIN  (enable authenticated /audit; disabled otherwise)`);
         process.exit(2);
       }
       const port = Number(arg("--port", process.argv) || 8787);
@@ -149,6 +150,13 @@ try {
         process.exit(2);
       }
 
+      // ── /audit administration (v0.2.1: authenticated or disabled) ──
+      const adminToken = arg("--admin-token", process.argv) || process.env.UTA_SHIELD_ADMIN || null;
+      if (adminToken && String(adminToken).length < 16) {
+        console.error("uta-shield: --admin-token / UTA_SHIELD_ADMIN must be at least 16 characters (it guards the audit trail)");
+        process.exit(2);
+      }
+
       const shield = createShield({
         feed,
         requireIdentity,
@@ -162,7 +170,8 @@ try {
         shield, upstream,
         limits: { maxBodyBytes, upstreamTimeoutMs },
         allowMethods,
-        trustProxy: process.argv.includes("--trust-proxy")
+        trustProxy: process.argv.includes("--trust-proxy"),
+        adminToken
       });
 
       const server = createServer(handler);
@@ -177,7 +186,7 @@ try {
         console.error(`  proxy     http://localhost:${port}/  (point your agents here)`);
         console.error(`  health    http://localhost:${port}/health`);
         console.error(`  pricing   http://localhost:${port}/pricing  (x402-ready manifest)`);
-        console.error(`  audit     http://localhost:${port}/audit`);
+        console.error(`  audit     ${adminToken ? `http://localhost:${port}/audit  (GET + x-uta-admin; AUTHENTICATED)` : "DISABLED — /audit returns 404 until you start with --admin-token (or UTA_SHIELD_ADMIN)"}`);
         console.error(`  identity  ${keys ? `hmac-verified (${Object.keys(keys).length} agent key(s))${acl ? ` · ACL: ${Object.keys(acl).length} agent(s)` : ""}` : (allowAnonymous ? "declared/anonymous (explicit opt-out)" : "declared required (--require-identity)")}`);
         console.error(`  outbound  policy=${policyRaw} · body≤${maxBodyBytes}B · upstream timeout ${upstreamTimeoutMs}ms · methods ${allowMethods === "*" ? "any" : (allowMethods ? allowMethods.join(",") : "default set")}`);
       });

@@ -51,12 +51,16 @@ const upstream = createServer(async (req, res) => {
 await new Promise(r => upstream.listen(UP_PORT, r));
 
 // ── 2. The shield in front of it (fail-closed, verified identity, redact policy) ──
+// v0.2.1: /audit is operator telemetry — an admin token is REQUIRED; without it
+// the endpoint answers 404 (fail-closed). The demo proves both behaviors.
+const ADMIN_TOKEN = "demo-admin-token-0123456789";
 const shield = spawn(process.execPath, [
   join(__dirname, "..", "bin", "cli.mjs"), "wrap",
   "--upstream", UP, "--port", String(SHIELD_PORT),
   "--keys-file", keysFile,
   "--acl-file", join(keysDir, "acl.json"),
-  "--outbound-policy", "redact"
+  "--outbound-policy", "redact",
+  "--admin-token", ADMIN_TOKEN
 ], { stdio: ["ignore", "pipe", "pipe"] });
 await new Promise((res, rej) => {
   shield.stderr.on("data", d => { if (String(d).includes("wrapping")) res(); });
@@ -147,17 +151,22 @@ for (let i = 0; i < 40 && !got429; i++) {
 line(`  429 after +${got429?.attempt ?? "?"} calls · retry-after: ${got429?.retryAfter ?? "?"}s`);
 line("  (and rotating declared names would NOT reset it — limits are keyed by verified agent + IP)");
 
-step(10, "Operator surfaces: /pricing (x402-ready) + /audit (last decisions)");
+step(10, "Operator surfaces: /pricing (x402-ready) + /audit (admin-only, v0.2.1)");
 const pricing = await (await fetch(SH + "/pricing")).json();
 line(`  pricing: ${j(pricing.prices)} · currency ${pricing.currency}`);
-const audit = await (await fetch(SH + "/audit")).json();
-line("  audit tail:");
+const noAuth = await fetch(SH + "/audit");
+line(`  /audit without credentials → ${noAuth.status} (401: operator telemetry is not public)`);
+const badAuth = await fetch(SH + "/audit", { headers: { "x-uta-admin": "wrong-token" } });
+line(`  /audit with wrong token   → ${badAuth.status} (attempt audited as AUDIT_DENIED)`);
+const audit = await (await fetch(SH + "/audit", { headers: { "x-uta-admin": ADMIN_TOKEN } })).json();
+line("  /audit with admin token   → 200 · audit tail:");
 for (const e of audit.slice(-6))
   line(`   · ${e.ts.slice(11, 19)} ${e.verdict.padEnd(17)} agent=${(e.agent || "-").padEnd(16)} tool=${e.tool || "-"}`);
 
 line("\nWhat you just saw: fail-closed identity (unsigned = 401, forged sig = 401),");
 line("PII masked, live C2 neutralized on the way out, campaign payload blocked,");
-line("per-tool ACL enforced, and per-agent+per-IP limits that survive name rotation.");
+line("per-tool ACL enforced, per-agent+per-IP limits that survive name rotation,");
+line("and an audit trail that answers 401 to everyone but the operator.");
 line("\nKill switch: Ctrl+C (demo cleans up upstream + shield + temp keys).");
 shield.kill("SIGTERM"); upstream.close();
 rmSync(keysDir, { recursive: true, force: true });
