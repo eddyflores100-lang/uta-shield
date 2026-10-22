@@ -50,7 +50,7 @@ export const TOOLS = [
   }
 ];
 
-export function createMcpHandler({ feed, serverName = "uta-shield", serverVersion = "0.1.0", mask = true }) {
+export function createMcpHandler({ feed, serverName = "uta-shield", serverVersion = "0.2.0", mask = true }) {
   if (!(feed instanceof Feed)) throw new Error("createMcpHandler requires a Feed instance");
 
   function toolResult(obj) {

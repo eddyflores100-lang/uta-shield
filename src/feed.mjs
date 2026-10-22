@@ -177,6 +177,23 @@ export class Feed {
     return { scanned: cands.length, hits };
   }
 
+  // v0.2.0 — neutralize every IOC occurrence found in text. Used by gateOut
+  // when the outbound policy is "redact": the response still flows, but the
+  // hostile infrastructure references are replaced with evidence placeholders.
+  redactText(text) {
+    const input = String(text ?? "");
+    const { hits } = this.screenText(input);
+    let out = input;
+    const redacted = [];
+    for (const h of hits) {
+      const q = h.query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const before = out;
+      out = out.replace(new RegExp(q, "gi"), `[IOC_REDACTED:${h.campaign.id}/${h.candidate_type}]`);
+      if (out !== before) redacted.push({ type: h.candidate_type, value: h.query, campaign: h.campaign.id });
+    }
+    return { text: out, redacted, hits };
+  }
+
   stats() {
     const byType = {};
     for (const c of this.campaigns) {
