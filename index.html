@@ -245,7 +245,7 @@
 <div class="page">
   <div class="pagenum"><b>uta-shield</b> · page 01 / 08</div>
   <div class="page__inner">
-    <div class="eyebrow">AliceLabs LLC · UTA stack · v0.1.0 shipped</div>
+    <div class="eyebrow">AliceLabs LLC · UTA stack · v0.2.2 shipped</div>
     <h1 class="mega">UTA<br>SHIELD</h1>
     <p class="tagline" data-en="The wall for the other side of MCP." data-es="El muro para el otro lado de MCP.">The wall for the other side of MCP.</p>
     <div class="wallbox" id="wallbox" aria-hidden="true">
@@ -258,15 +258,15 @@
       <div class="wall-score">
         <span class="ws-allow"><b id="ws-allow">0</b> <span data-en="allowed" data-es="permitidas">allowed</span></span>
         <span class="ws-block"><b id="ws-block">0</b> <span data-en="blocked" data-es="bloqueadas">blocked</span></span>
-        <span class="ws-live" data-en="live demo — watch the wall decide" data-es="demo en vivo — mira al muro decidir">live demo — watch the wall decide</span>
+        <span class="ws-live" data-en="simulated animation — illustrative, not live metrics" data-es="animación simulada — ilustrativa, no son métricas reales">simulated animation — illustrative, not live metrics</span>
       </div>
     </div>
     <p class="lede rich-en">Lasso, Mintive, Obot and agentgateway protect the <b>consumer</b> — the company whose agents call third-party servers. Nobody protects the <b>operator</b>: the SaaS that publishes an MCP server and exposes its database to every anonymous agent on the internet. <b>uta-shield is the mirror side.</b> Wrap your server once — identity gates, threat-intel blocking, rate limits, DLP, x402-ready metering and a full audit trail. Zero code changes. Zero dependencies.</p>
     <p class="lede rich-es">Lasso, Mintive, Obot y agentgateway protegen al <b>consumidor</b> — la empresa cuyos agentes llaman a servidores de terceros. Nadie protege al <b>operador</b>: el SaaS que publica un servidor MCP y expone su base de datos a cada agente anónimo de internet. <b>uta-shield es el lado espejo.</b> Envuelve tu servidor una vez — gates de identidad, bloqueo de threat-intel, rate limits, DLP, metering listo para x402 y auditoría completa. Cero cambios de código. Cero dependencias.</p>
     <div class="stats">
-      <span><b>28/28</b> tests</span><span class="sep">·</span>
+      <span><b>85/85</b> tests</span><span class="sep">·</span>
       <span><b>0</b> dependencies</span><span class="sep">·</span>
-      <span><b>19.8 kB</b></span><span class="sep">·</span>
+      <span><b>58 kB</b></span><span class="sep">·</span>
       <span><b>23</b> live IOCs</span><span class="sep">·</span>
       <span><b>~12 h</b> takedown</span><span class="sep">·</span>
       <span><b>2 min</b> install</span>
@@ -311,7 +311,7 @@
       <div class="verdict verdict--hot">
         <div class="v-tag" data-en="operator side — this" data-es="lado operador — este">operator side — this</div>
         <div class="v-name" data-en="“I publish an MCP server. Every anonymous agent on the internet hits my database.”" data-es="“Publico un servidor MCP. Cada agente anónimo de internet golpea mi base de datos.”">“I publish an MCP server. Every anonymous agent on the internet hits my database.”</div>
-        <div class="v-desc" data-en="Solved by uta-shield — the first provider-side firewall: 19.8 kB, auditable line by line, shipped." data-es="Lo resuelve uta-shield — el primer firewall lado-proveedor: 19.8 kB, auditable línea a línea, entregado.">Solved by uta-shield — the first provider-side firewall: 19.8 kB, auditable line by line, shipped.</div>
+        <div class="v-desc" data-en="Solved by uta-shield — the first provider-side firewall: 58 kB, auditable line by line, shipped." data-es="Lo resuelve uta-shield — el primer firewall lado-proveedor: 58 kB, auditable línea a línea, entregado.">Solved by uta-shield — the first provider-side firewall: 58 kB, auditable line by line, shipped.</div>
       </div>
     </div>
     <div class="with-margin" style="margin-top:2.5rem">
@@ -330,7 +330,7 @@
   <div class="page__inner">
     <div class="section-head">
       <h2 data-en="What it does" data-es="Qué hace">What it does</h2>
-      <span class="kicker" data-en="solid underline = ships in v0.1.0 · dashed = design hook — honesty policy" data-es="subrayado sólido = viene en v0.1.0 · punteado = hook de diseño — política de honestidad">solid underline = ships in v0.1.0 · dashed = design hook — honesty policy</span>
+      <span class="kicker" data-en="solid underline = shipped · dashed = design hook — honesty policy" data-es="subrayado sólido = entregado · punteado = hook de diseño — política de honestidad">solid underline = shipped · dashed = design hook — honesty policy</span>
     </div>
     <ol class="steps">
       <li><span data-en="Agent identity — x-agent-name / passport header, optional <code class='chip'>/.well-known/agent.json</code> verification, <code class='chip'>--require-identity</code> refuses anonymous calls." data-es="Identidad del agente — header x-agent-name / pasaporte, verificación opcional de <code class='chip'>/.well-known/agent.json</code>, <code class='chip'>--require-identity</code> rechaza llamadas anónimas.">Agent identity — x-agent-name / passport header, optional <code class="chip">/.well-known/agent.json</code> verification, <code class="chip">--require-identity</code> refuses anonymous calls.</span><span class="st st--ship">shipped</span></li>
@@ -342,7 +342,7 @@
       <li><span data-en="Reverse drift — notify clients when your schema changes. Fewer broken agents, more trust." data-es="Drift inverso — notificar a los clientes cuando tu esquema cambia. Menos agentes rotos, más confianza.">Reverse drift — notify clients when your schema changes. Fewer broken agents, more trust.</span><span class="st st--hook">hook</span></li>
       <li><span data-en="Audit — JSONL per decision. Indicator + campaign recorded for triage, <b>never</b> raw arguments. SIEM-grade hygiene." data-es="Auditoría — JSONL por decisión. Indicador + campaña registrados para triage, <b>nunca</b> argumentos crudos. Higiene nivel SIEM.">Audit — JSONL per decision. Indicator + campaign recorded for triage, <b>never</b> raw arguments. SIEM-grade hygiene.</span><span class="st st--ship">shipped</span></li>
     </ol>
-    <p class="small" style="margin-top:1.8rem" data-en="~1,200 auditable lines of Node ≥18 (ESM), hand-rolled MCP stdio (newline-delimited JSON-RPC 2.0, protocol 2025-06-18). A security product with 47 transitive dependencies is an attack surface, not a defense." data-es="~1,200 líneas auditables de Node ≥18 (ESM), MCP stdio a mano (JSON-RPC 2.0 delimitado por saltos, protocolo 2025-06-18). Un producto de seguridad con 47 dependencias transitivas es una superficie de ataque, no una defensa.">~1,200 auditable lines of Node ≥18 (ESM), hand-rolled MCP stdio (newline-delimited JSON-RPC 2.0, protocol 2025-06-18). A security product with 47 transitive dependencies is an attack surface, not a defense.</p>
+    <p class="small" style="margin-top:1.8rem" data-en="~1,300 auditable lines of Node ≥18 (ESM), hand-rolled MCP stdio (newline-delimited JSON-RPC 2.0, protocol 2025-06-18). A security product with 47 transitive dependencies is an attack surface, not a defense." data-es="~1,300 líneas auditables de Node ≥18 (ESM), MCP stdio a mano (JSON-RPC 2.0 delimitado por saltos, protocolo 2025-06-18). Un producto de seguridad con 47 dependencias transitivas es una superficie de ataque, no una defensa.">~1,300 auditable lines of Node ≥18 (ESM), hand-rolled MCP stdio (newline-delimited JSON-RPC 2.0, protocol 2025-06-18). A security product with 47 transitive dependencies is an attack surface, not a defense.</p>
   </div>
 </div>
 
@@ -395,10 +395,10 @@
       </div>
     </div>
     <div class="eq">
-      <code>$ curl -s :8787/audit | tail -2
-{"ts":"…","decision":"BLOCK_INTEL","indicator":"gaganata.ink","campaign":"taikotalent-2026-10"}
-{"ts":"…","decision":"ALLOW","agent":"copilot-cli","tool":"search_contacts","ms":23}</code>
-      <div class="explain" data-en="Every decision leaves a line. Triage reads indicators and campaigns — never your users' raw arguments." data-es="Cada decisión deja una línea. El triage lee indicadores y campañas — nunca los argumentos crudos de tus usuarios.">Every decision leaves a line. Triage reads indicators and campaigns — never your users' raw arguments.</div>
+      <code>$ curl -s -H "x-uta-admin: $UTA_ADMIN" :8787/audit | tail -2
+{"ts":"…","seq":12,"verdict":"BLOCK_INTEL","tool":"fetch_url","reason":"IOC match in tool-call arguments","findings":[{"value":"gaganata.ink","campaign":"taikotalent-2026-10"}]}
+{"ts":"…","seq":13,"verdict":"ALLOW_VERIFIED","agent":"copilot-cli","tool":"search_contacts","latency_ms":23}</code>
+      <div class="explain" data-en="Every decision leaves a line — operator telemetry only. No admin token configured → /audit answers 404 (fail-closed); wrong token → 401, and the denial is audited. Triage reads verdicts and campaigns — never your users' raw arguments." data-es="Cada decisión deja una línea — telemetría solo del operador. Sin admin token configurado → /audit responde 404 (fail-closed); token erróneo → 401, y el rechazo queda auditado. El triage lee veredictos y campañas — nunca los argumentos crudos de tus usuarios.">Every decision leaves a line — operator telemetry only. No admin token configured → /audit answers 404 (fail-closed); wrong token → 401, and the denial is audited. Triage reads verdicts and campaigns — never your users' raw arguments.</div>
     </div>
   </div>
 </div>
