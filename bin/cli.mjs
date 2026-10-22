@@ -19,7 +19,7 @@ import { createShield, OUTBOUND_POLICIES } from "../src/shield.mjs";
 import { createProxyHandler } from "../src/proxy.mjs";
 import { startStdio } from "../src/mcp/server.mjs";
 
-const VERSION = "0.2.1";
+const VERSION = "0.2.2";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUNDLED_FEED = join(__dirname, "..", "feed", "iocs.json");
 
@@ -87,6 +87,7 @@ try {
         console.error(`usage: uta-shield wrap --upstream http://localhost:3001 [--port 8787]
   identity     --keys-file keys.json | --allow-anonymous | --require-identity
                --acl-file acl.json          per-tool authorization per agent
+               --acl-deny-unlisted          strict ACL: agents NOT listed are denied (requires --acl-file)
   outbound     --outbound-policy block|redact|log      (default: redact)
   proxy limits --max-body-bytes N | --upstream-timeout-ms N | --allow-methods "m1,m2" | "*"
                --trust-proxy                             (honor X-Forwarded-For)
@@ -132,6 +133,14 @@ try {
           process.exit(2);
         }
       }
+      // v0.2.2: strict ACL mode — agents NOT listed in the ACL are denied
+      // (allow-list semantics). Fail-closed: meaningless (and dangerous:
+      // denies everyone) without an ACL file, so refuse to start.
+      const aclDenyUnlisted = process.argv.includes("--acl-deny-unlisted");
+      if (aclDenyUnlisted && !acl) {
+        console.error("uta-shield: --acl-deny-unlisted requires --acl-file (deny-by-default with no ACL would reject every agent)");
+        process.exit(2);
+      }
 
       // ── outbound + proxy limits ──
       const policyRaw = (arg("--outbound-policy", process.argv) || "redact").toLowerCase();
@@ -160,7 +169,7 @@ try {
       const shield = createShield({
         feed,
         requireIdentity,
-        identity: { keys, acl },
+        identity: { keys, acl, aclDenyUnlisted },
         outboundPolicy: policyRaw,
         dlp: { enabled: !process.argv.includes("--no-dlp") },
         billing: { enabled: true, prices: { "*": { amount: "0.001", unit: "per-call" } } }
@@ -187,7 +196,7 @@ try {
         console.error(`  health    http://localhost:${port}/health`);
         console.error(`  pricing   http://localhost:${port}/pricing  (x402-ready manifest)`);
         console.error(`  audit     ${adminToken ? `http://localhost:${port}/audit  (GET + x-uta-admin; AUTHENTICATED)` : "DISABLED — /audit returns 404 until you start with --admin-token (or UTA_SHIELD_ADMIN)"}`);
-        console.error(`  identity  ${keys ? `hmac-verified (${Object.keys(keys).length} agent key(s))${acl ? ` · ACL: ${Object.keys(acl).length} agent(s)` : ""}` : (allowAnonymous ? "declared/anonymous (explicit opt-out)" : "declared required (--require-identity)")}`);
+        console.error(`  identity  ${keys ? `hmac-verified (${Object.keys(keys).length} agent key(s))${acl ? ` · ACL: ${Object.keys(acl).length} agent(s)${aclDenyUnlisted ? " · deny-unlisted (strict)" : ""}` : ""}` : (allowAnonymous ? "declared/anonymous (explicit opt-out)" : "declared required (--require-identity)")}`);
         console.error(`  outbound  policy=${policyRaw} · body≤${maxBodyBytes}B · upstream timeout ${upstreamTimeoutMs}ms · methods ${allowMethods === "*" ? "any" : (allowMethods ? allowMethods.join(",") : "default set")}`);
       });
       break;

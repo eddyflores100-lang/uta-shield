@@ -35,7 +35,7 @@ npx uta-shield wrap --upstream http://localhost:3001 --port 8787 --keys-file key
 node demo/run-demo.mjs
 ```
 
-## Verified identity (v0.2.0)
+## Verified identity (v0.2.0, ACL strict mode v0.2.2)
 
 Identity is no longer declared-only. Agents present three headers:
 
@@ -49,6 +49,7 @@ x-agent-signature: <hex>                    HMAC_SHA256(secret, `${agent}|${ts}|
 - **Presented-but-invalid credentials → `REJECT_AUTH` (401). Fail-closed, always.**
 - No credentials → `REJECT_ANON` (401) unless the operator passes `--allow-anonymous`.
 - Declared names (no signature) are labels only, `verified:false` — they earn **no** per-agent rate bucket.
+- **Per-tool ACL** (`--acl-file`): by default, agents absent from the map are unrestricted. For allow-list semantics, add `--acl-deny-unlisted` — unlisted agents get `403 REJECT_FORBIDDEN` even with a valid signature. The CLI refuses `--acl-deny-unlisted` without an ACL file (with no map, deny-unlisted would reject every agent). `/health` discloses `identity.acl_deny_unlisted`.
 
 Signing a request (client side, any language):
 
@@ -61,7 +62,7 @@ const sig = createHmac("sha256", secret).update(`${agent}|${ts}|${bodyHash}`).di
 
 ## The 8 layers
 
-| # | Layer | Status in v0.2.0 |
+| # | Layer | Status in v0.2.2 |
 |---|-------|------------------|
 | 1 | Agent identity: **HMAC-SHA256 verified** (`--keys-file`, anti-replay window, fail-closed) + **per-tool ACL** (`--acl-file`) + declared/anonymous fallback | **SHIPPED** |
 | 2 | Reputation score per agent | hook (identity verdicts recorded; scoring = roadmap) |
@@ -124,15 +125,20 @@ Contact: AliceLabs LLC — support@alicelabs.energy
 ## Test (reproducible)
 
 ```bash
-node --test test/*.test.mjs   # 81 tests: identity/HMAC, ACL, outbound policies, DLP formats,
-                             # authenticated /audit, exact verdict propagation, proxy limits
+node --test test/*.test.mjs   # 85 tests: identity/HMAC, strict-ACL, outbound policies, DLP formats,
+                             # authenticated /audit, exact verdict propagation, streamed overflow,
+                             # MCP client lifecycle e2e, proxy limits,
                               # two-tier rate limits, hardened proxy e2e (413/502/504/403/429),
                               # feed matching, MCP protocol
 npm run verify-feed           # feed schema validation
 npm run demo                  # end-to-end with signed traffic
 ```
 
-Test results for v0.2.1: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, full runner summary).
+**Independent execution:** `.github/workflows/tests.yml` runs the full suite
+on GitHub's own runners (Node 20/22/24) on every push — the results are public
+and don't depend on this file's claims.
+
+Test results for v0.2.2: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, full runner summary).
 
 ## Migration v0.1.0 → v0.2.0 (breaking)
 
@@ -144,5 +150,9 @@ Test results for v0.2.1: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, 
 ## Migration v0.2.0 → v0.2.1 (breaking)
 
 - **`GET /audit` no longer works without credentials.** Without `--admin-token` (or `UTA_SHIELD_ADMIN`) it answers **404**; with a token it requires the `x-uta-admin` header. Dashboards that scraped `/audit` anonymously must present the operator token. The response flag `x-uta-shield` is now the exact core verdict — `policy=log` users will see `OUTBOUND_INTEL` instead of the previously mislabeled flag.
+
+## Migration v0.2.1 → v0.2.2
+
+- Additive. `--acl-deny-unlisted` enables opt-in strict ACL (allow-list semantics); the CLI refuses to start with that flag but no `--acl-file` (fail-closed). New audit verdicts: `BODY_TOO_LARGE` (both 413 paths — v0.2.1 added `AUDIT_DISABLED`/`AUDIT_DENIED`). Public CI added — nothing else changes for existing operators.
 
 Licensed for use — see [LICENSE](LICENSE) (license for use / licencia de uso). © 2026 AliceLabs LLC. Commercial exceptions (white label, OEM, redistribution, managed service): support@alicelabs.energy

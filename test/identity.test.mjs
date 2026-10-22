@@ -95,3 +95,15 @@ test("ACL: per-tool allow-list, wildcard, empty list denies, unlisted agent unaf
   assert.equal(agentAllowed(acl, "bot-c", "anything"), false);
   assert.equal(agentAllowed(acl, "unlisted-bot", "anything"), true);
 });
+
+test("ACL strict mode (denyUnlisted): agents absent from the map are DENIED, listed ones keep their grants", () => {
+  const acl = { "bot-a": ["search_contacts"], "ops-bot": ["*"] };
+  // strict: unlisted → denied regardless of tool
+  assert.equal(agentAllowed(acl, "unlisted-bot", "anything", { denyUnlisted: true }), false);
+  // strict: listed agents behave exactly as in default mode
+  assert.equal(agentAllowed(acl, "bot-a", "search_contacts", { denyUnlisted: true }), true);
+  assert.equal(agentAllowed(acl, "bot-a", "delete_all", { denyUnlisted: true }), false);
+  assert.equal(agentAllowed(acl, "ops-bot", "anything", { denyUnlisted: true }), true);
+  // without an ACL map the flag is inert (operators cannot accidentally deny the world)
+  assert.equal(agentAllowed(null, "anyone", "anything", { denyUnlisted: true }), true);
+});

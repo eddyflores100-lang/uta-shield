@@ -101,9 +101,14 @@ export function createProxyHandler({ shield, upstream, limits = {}, allowMethods
       return json(res, 405, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "method not allowed — POST JSON-RPC over HTTP" } }, { allow: "GET, POST" });
     }
 
+    // v0.2.2: resolved once, up front — the body-limit audit records below
+    // need it before the gateIn section runs.
+    const ip = clientIp(req);
+
     // ── request body: hard size limit (declared + streamed) ──
     const declaredLen = Number(req.headers["content-length"] || 0);
     if (declaredLen > lim.maxBodyBytes) {
+      shield.audit.log({ verdict: "BODY_TOO_LARGE", ip, tool: req.url === "/" ? null : req.url, reason: `declared content-length ${declaredLen} > limit ${lim.maxBodyBytes}` });
       return json(res, 413, { jsonrpc: "2.0", id: null, error: { code: -32008, message: `request body too large (limit ${lim.maxBodyBytes} bytes)` } }, { "x-uta-shield": "BODY_TOO_LARGE" });
     }
     const chunks = [];
@@ -114,7 +119,11 @@ export function createProxyHandler({ shield, upstream, limits = {}, allowMethods
       chunks.push(c);
     }
     if (overflow) {
-      req.destroy();
+      // v0.2.2: stop the upload, but let the 413 reach the client FIRST —
+      // destroying the socket before the response is flushed would surface
+      // as ECONNRESET instead of a clean 413. Socket dies on "finish".
+      res.once("finish", () => req.destroy());
+      shield.audit.log({ verdict: "BODY_TOO_LARGE", ip, reason: `streamed body exceeded ${lim.maxBodyBytes} bytes mid-read (content-length absent or false)` });
       return json(res, 413, { jsonrpc: "2.0", id: null, error: { code: -32008, message: `request body too large (limit ${lim.maxBodyBytes} bytes)` } }, { "x-uta-shield": "BODY_TOO_LARGE" });
     }
     const rawBody = Buffer.concat(chunks).toString("utf8");
@@ -135,7 +144,6 @@ export function createProxyHandler({ shield, upstream, limits = {}, allowMethods
 
     const isCall = method === "tools/call";
     const tool = isCall ? body?.params?.name : method;
-    const ip = clientIp(req);
 
     // ── gateIn (identity → ACL → intel → rate limit) ──
     let gate;

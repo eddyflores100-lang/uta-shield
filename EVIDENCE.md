@@ -1,8 +1,10 @@
-# EVIDENCE.md — uta-shield v0.2.1 verification run
+# EVIDENCE.md — uta-shield v0.2.2 verification run
 
-Reproducible record of the v0.2.0 security hardening AND the v0.2.1
-second-review fixes (2026-10-23). Anyone can re-run every command below from a
-clean checkout.
+Reproducible record of the v0.2.0 security hardening, the v0.2.1 second-review
+fixes AND the v0.2.2 third-review fixes (2026-10-23). Anyone can re-run every
+command below from a clean checkout — or simply read the public CI run
+(`.github/workflows/tests.yml` executes the full suite on GitHub's own
+runners, Node 20/22/24, on every push).
 
 ## Environment
 
@@ -11,8 +13,8 @@ clean checkout.
 | Date | 2026-10-23 (UTC-5 session) |
 | Node | v24.21.0 (`node --version`) |
 | Platform | Linux x86_64 |
-| Package | uta-shield 0.2.1 (zero dependencies) |
-| Repo state | `main`, base commit `cb00f85` + hardening change sets v0.2.0/v0.2.1 |
+| Package | uta-shield 0.2.2 (zero dependencies) |
+| Repo state | `main`, base commit `cb00f85` + hardening change sets v0.2.0/v0.2.1/v0.2.2 |
 
 ## 1. Full test suite
 
@@ -25,17 +27,17 @@ node --test test/*.test.mjs
 Result: **exit 0**
 
 ```
-ℹ tests 81
+ℹ tests 85
 ℹ suites 0
-ℹ pass 81
+ℹ pass 85
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 761
+ℹ duration_ms 770
 ```
 
-What the 81 tests cover (audit finding → test):
+What the 85 tests cover (audit finding → test):
 
 | Audit finding (v0.1.0 / second review) | Fix | Tests |
 |---|---|---|
@@ -49,6 +51,10 @@ What the 81 tests cover (audit finding → test):
 | DLP limited formats | GCP/GitHub-PAT/Stripe/hex/obfuscated-email/Luhn cards/opt-in base64, depth-aggregated findings | `dlp.test.mjs` (11) |
 | No body limits / timeouts / safe errors / method policy | hardened proxy | `proxy.test.mjs`: 413 oversized, 504 timeout (fixed message), 502 unreachable without internals leak, 403 METHOD_DENIED, unsigned 401, corrupted-signature 401, BLOCK_INTEL e2e, OUT_REDACTED e2e, OUT_BLOCKED e2e, 429 with retry-after, health posture disclosure |
 | (regression guard) v0.1.0 behavior | preserved | `feed.test.mjs` (8), `mcp.test.mjs` (7), shield tests for BLOCK_INTEL / REJECT_ANON / audit hygiene |
+| **ACL default-allow (3rd review)** | opt-in strict mode `aclDenyUnlisted` / `--acl-deny-unlisted` (CLI refuses it without `--acl-file`); health discloses posture | `identity.test.mjs` +1: unlisted denied, listed keep grants, flag inert without ACL map; `proxy.test.mjs` +1 e2e: verified-but-unlisted agent → 403 even with valid HMAC, listed agent → 200 |
+| **Streamed overflow unproven (3rd review)** | mid-read branch audits `BODY_TOO_LARGE` and flushes the 413 before socket destroy | `proxy.test.mjs` +1 e2e: chunked body (no content-length) > limit against a DEAD upstream → clean 413 (a 502 would mean fetch ran), audit record present |
+| **MCP compatibility undemonstrated (3rd review)** | lifecycle walked as a real client session | `proxy.test.mjs` +1 e2e: initialize → notifications/initialized → tools/list → tools/call → ping all 200 with HMAC identity; `resources/list` (outside allow-list) → 403 METHOD_DENIED |
+| **Independent reproduction (3rd review)** | public CI on GitHub runners | `.github/workflows/tests.yml`: Node 20/22/24 matrix, full suite + verify-feed + fail-closed startup proof, on every push |
 
 ## 2. Feed validation
 
@@ -89,13 +95,14 @@ Observed verdicts in one run: `401 REJECT_ANON` (unsigned) → `200 ALLOW_VERIFI
 
 ```bash
 npm pack --dry-run
-# uta-shield-0.2.1.tgz · 29 files · 0 dependencies
+# uta-shield-0.2.2.tgz · 0 dependencies
 ```
 
 ## Reproduction checklist
 
 1. `git clone https://github.com/eddyflores100-lang/uta-shield && cd uta-shield`
 2. `node --version` (≥18 required; evidence generated on v24.21.0)
-3. `npm test` → expect 81/81 pass
+3. `npm test` → expect 85/85 pass
 4. `npm run verify-feed` → expect `ok: true`, 23 IOCs
 5. `npm run demo` → expect the verdict sequence in §4 (including the two 401s on `/audit`)
+6. or read the public CI run instead of steps 1-5 — same commands, GitHub's runners

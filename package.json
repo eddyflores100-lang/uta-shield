@@ -1,6 +1,6 @@
 {
   "name": "uta-shield",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Provider-side firewall for MCP servers + bundled PhishGuard threat-intel MCP server. Zero dependencies, zero supply-chain surface.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",

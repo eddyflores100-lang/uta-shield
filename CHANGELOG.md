@@ -1,5 +1,49 @@
 # Changelog — uta-shield
 
+## 0.2.2 — third-review hardening (2026-10-23)
+
+Response to the third external review, which confirmed the v0.2.0/v0.2.1
+progress and raised three code items plus one evidence item. All four closed;
+81 → 85 tests.
+
+### Fixed (third-review findings)
+
+- **ACL default-allow** (`src/identity.mjs`): agents absent from the ACL map
+  were always allowed. → NEW opt-in strict mode: `identity.aclDenyUnlisted`
+  (API) / `--acl-deny-unlisted` (CLI) switches the ACL to allow-list semantics
+  — unlisted agents get `403 REJECT_FORBIDDEN`. Fail-closed wiring: the CLI
+  refuses to start with `--acl-deny-unlisted` but no `--acl-file` (with no ACL
+  the flag would deny every agent). `/health` discloses
+  `identity.acl_deny_unlisted`.
+- **Streamed overflow had no dedicated proof** (`src/proxy.mjs`): the mid-read
+  branch now audits `BODY_TOO_LARGE` (a lying or absent content-length cannot
+  dodge the trail) and flushes the `413` BEFORE destroying the socket — the
+  client sees a clean `413`, not `ECONNRESET`. New e2e test proves it with a
+  chunked body (no content-length) against a DEAD upstream: a `413` response
+  is only possible if the fetch never ran.
+- **MCP compatibility undemonstrated** → new lifecycle e2e test walks a real
+  client session over the proxy: `initialize` → `notifications/initialized` →
+  `tools/list` → `tools/call` → `ping` all pass with HMAC identity; a surface
+  outside the allow-list (`resources/list`) gets `403 METHOD_DENIED`.
+
+### Added
+
+- **`.github/workflows/tests.yml`** — public CI on GitHub's own runners
+  (Node 20/22/24 matrix): full suite + `verify-feed` + fail-closed startup
+  proof on every push. Independent reproduction no longer depends on trusting
+  EVIDENCE.md: anyone can read the workflow run.
+
+### Changed
+
+- Version alignment across `package.json`, CLI banner, MCP `serverInfo`,
+  shield default. Audit records for both 413 paths.
+
+### Tests
+
+- 85/85 green (`node --test test/*.test.mjs`, Node v24.21.0): `identity.test.mjs`
+  +1 (strict ACL semantics), `proxy.test.mjs` +3 (strict-ACL e2e, streamed
+  overflow e2e, MCP lifecycle e2e).
+
 ## 0.2.1 — second-review hardening (2026-10-23)
 
 Direct response to a second external review of the v0.2.0 change set. Two real

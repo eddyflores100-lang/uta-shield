@@ -7,7 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { Feed } from "../src/feed.mjs";
@@ -258,7 +258,7 @@ test("health endpoint discloses the actual security posture", async () => {
     const r = await fetch(stack.url + "/health");
     assert.equal(r.status, 200);
     const h = await r.json();
-    assert.equal(h.version, "0.2.1");
+    assert.equal(h.version, "0.2.2");
     assert.equal(h.outbound_policy, "block");
     assert.equal(h.identity.mode, "hmac-verified");
     assert.equal(h.proxy.max_body_bytes, 4096);
@@ -324,5 +324,112 @@ test("outbound log e2e: policy=log passes content through but header reports OUT
     const rec = stack.shield.audit.last(5).find(rec => rec.verdict === "OUTBOUND_INTEL");
     assert.ok(rec, "OUTBOUND_INTEL decision is audited");
     assert.ok(rec.findings.some(f => f.campaign === "taikotalent-2026-10"));
+  } finally { await stack.stop(); }
+});
+
+// ── v0.2.2: third-review items — strict ACL, streamed overflow, MCP lifecycle ──
+
+test("ACL strict mode e2e: unlisted verified agent → 403 REJECT_FORBIDDEN; listed agent keeps access", async () => {
+  const stack = await startStack({
+    shieldOpts: {
+      identity: { keys: KEYS, acl: { "hammer-bot": ["*"] }, aclDenyUnlisted: true }
+    }
+  });
+  try {
+    // helper-bot IS verified (valid key) but NOT in the ACL → denied even verified
+    const denied = await signedFetch(stack.url, rpc("tools/list", null, 50), { agent: "helper-bot", secret: KEYS["helper-bot"] });
+    assert.equal(denied.status, 403);
+    const db = await denied.json();
+    assert.equal(db.error.code, -32002);
+    assert.match(db.error.message, /not authorized by ACL/);
+    // hammer-bot is listed with wildcard → allowed
+    const allowed = await signedFetch(stack.url, rpc("tools/list", null, 51), { agent: "hammer-bot", secret: KEYS["hammer-bot"] });
+    assert.equal(allowed.status, 200);
+    // health discloses the strict posture
+    const h = await (await fetch(stack.url + "/health")).json();
+    assert.equal(h.identity.acl_deny_unlisted, true);
+  } finally { await stack.stop(); }
+});
+
+test("streamed overflow e2e: chunked body (no content-length) exceeding the limit mid-read → 413, upstream NEVER called, decision audited", async () => {
+  // dead upstream: if the proxy (wrongly) forwarded, the client would see 502,
+  // never 413 — so 413 itself proves the fetch never ran.
+  const dead = mkUpstream();
+  await listen(dead);
+  const deadPort = portOf(dead);
+  await closeServer(dead);
+
+  const shield = createShield({ feed, identity: { keys: KEYS } });
+  const server = createServer(createProxyHandler({
+    shield,
+    upstream: `http://127.0.0.1:${deadPort}`,
+    limits: { maxBodyBytes: 1024 } // tiny limit on purpose
+  }));
+  await listen(server);
+  try {
+    const url = `http://127.0.0.1:${portOf(server)}`;
+    // node:http client without content-length → chunked transfer-encoding;
+    // the server cannot know the size up front, only by counting the stream.
+    // Settle exactly once — the server destroys the socket right after the
+    // 413 is flushed, so res "close" is the only event guaranteed to fire.
+    const status = await new Promise((resolve, reject) => {
+      let settled = false;
+      const settle = fn => v => { if (!settled) { settled = true; fn(v); } };
+      const u = new URL(url);
+      const req = httpRequest(
+        { host: u.hostname, port: u.port, path: "/", method: "POST", headers: { "content-type": "application/json" } },
+        (res) => {
+          res.resume();
+          res.on("close", settle(() => resolve(res.statusCode)));
+          res.on("error", settle(reject));
+        }
+      );
+      req.on("error", settle(reject));
+      const piece = Buffer.alloc(512, 0x78); // 512 × 'x'
+      for (let i = 0; i < 6; i++) req.write(piece); // 3 KiB streamed in 6 chunks > 1024 B limit
+      req.end();
+    });
+    assert.equal(status, 413, "mid-read overflow must surface as a clean 413 (not ECONNRESET, not 502)");
+    const rec = shield.audit.last(5).find(rec => rec.verdict === "BODY_TOO_LARGE");
+    assert.ok(rec, "streamed overflow must be audited — a lying content-length cannot dodge the trail");
+    assert.match(rec.reason, /streamed body exceeded/);
+  } finally { await closeServer(server); }
+});
+
+test("MCP client lifecycle e2e over the proxy: initialize → initialized → tools/list → tools/call → ping all pass; resources/list is denied", async () => {
+  const stack = await startStack({ shieldOpts: { identity: { keys: KEYS } } });
+  try {
+    // 1) initialize (the MCP handshake)
+    const init = await signedFetch(stack.url, rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {} }, 60));
+    assert.equal(init.status, 200);
+    assert.equal((await init.json()).result.served, "initialize");
+
+    // 2) notifications/initialized (a JSON-RPC notification — no id)
+    const notif = await signedFetch(stack.url, JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }));
+    assert.equal(notif.status, 200);
+    await notif.arrayBuffer();
+
+    // 3) tools/list
+    const list = await signedFetch(stack.url, rpc("tools/list", null, 61));
+    assert.equal(list.status, 200);
+    assert.equal((await list.json()).result.served, "tools/list");
+
+    // 4) tools/call (clean tool → clean response, exact verdict travels)
+    const call = await signedFetch(stack.url, rpc("tools/call", { name: "search_contacts", arguments: { q: "jane" } }, 62));
+    assert.equal(call.status, 200);
+    assert.equal(call.headers.get("x-uta-shield"), "OUT_OK");
+
+    // 5) ping (protocol liveness)
+    const ping = await signedFetch(stack.url, rpc("ping", null, 63));
+    assert.equal(ping.status, 200);
+
+    // 6) a protocol surface outside the allow-list → 403 METHOD_DENIED
+    const denied = await signedFetch(stack.url, rpc("resources/list", null, 64));
+    assert.equal(denied.status, 403);
+    assert.equal(denied.headers.get("x-uta-shield"), "METHOD_DENIED");
+
+    // the whole session is one coherent audit trail
+    const verdicts = stack.shield.audit.last(10).map(r => r.verdict);
+    assert.ok(verdicts.includes("ALLOW_VERIFIED"));
   } finally { await stack.stop(); }
 });

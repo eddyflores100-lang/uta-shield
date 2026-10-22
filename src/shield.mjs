@@ -25,14 +25,14 @@ export function createShield(options = {}) {
   const opts = {
     feed: options.feed,                                    // Feed instance (required for intel)
     requireIdentity: options.requireIdentity ?? false,     // reject anonymous callers
-    identity: options.identity ?? {},                      // { keys, acl, maxSkewMs }
+    identity: options.identity ?? {},                      // { keys, acl, maxSkewMs, aclDenyUnlisted }
     outboundPolicy: normalizePolicy(options.outboundPolicy ?? "redact"),
     dlp: options.dlp ?? { enabled: true },                 // layer 6
     ratelimit: options.ratelimit ?? { ratePerMin: 30, burst: 10 }, // layer 4 (adds ipRatePerMin/ipBurst)
     audit: options.audit ?? {},                            // layer 8 ({file})
     billing: options.billing ?? { enabled: false },        // layer 5
     name: options.name ?? "uta-shield",
-    version: options.version ?? "0.2.1"
+    version: options.version ?? "0.2.2"
   };
 
   const audit = new AuditLog(opts.audit);
@@ -62,7 +62,7 @@ export function createShield(options = {}) {
     }
 
     // Layer 1b — per-tool authorization (ACL), for agents listed in the ACL map
-    if (tool && opts.identity.acl && !agentAllowed(opts.identity.acl, id.agent, tool)) {
+    if (tool && opts.identity.acl && !agentAllowed(opts.identity.acl, id.agent, tool, { denyUnlisted: !!opts.identity.aclDenyUnlisted })) {
       audit.log({ verdict: "REJECT_FORBIDDEN", agent: id.agent, ip, tool, reason: `tool "${tool}" not authorized for this agent by ACL` });
       return { verdict: "REJECT_FORBIDDEN", agent: id.agent, verified: id.verified, reason: "tool not authorized by ACL", hits: [] };
     }
@@ -194,7 +194,8 @@ export function createShield(options = {}) {
         identity: {
           mode: opts.identity.keys && Object.keys(opts.identity.keys).length ? "hmac-verified" : (opts.requireIdentity ? "declared-required" : "declared/anonymous"),
           verified_supported: !!(opts.identity.keys && Object.keys(opts.identity.keys).length),
-          acl_agents: opts.identity.acl ? Object.keys(opts.identity.acl).length : 0
+          acl_agents: opts.identity.acl ? Object.keys(opts.identity.acl).length : 0,
+          acl_deny_unlisted: !!opts.identity.aclDenyUnlisted
         },
         feed: opts.feed ? opts.feed.stats() : null,
         audit: audit.stats()

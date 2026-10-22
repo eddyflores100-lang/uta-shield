@@ -1,0 +1,45 @@
+# uta-shield CI — independent, public test execution.
+# The external review asked for independent reproduction of the test suite:
+# this workflow runs the FULL suite on every push, on GitHub's own runners —
+# the results are visible to anyone without trusting the published EVIDENCE.md.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Package sanity (zero dependencies, version consistency)
+        run: |
+          node --version
+          npm pack --dry-run
+
+      - name: Full test suite
+        run: node --test test/*.test.mjs
+
+      - name: Feed validation (bundled IOC feed)
+        run: node bin/cli.mjs verify-feed
+
+      - name: Fail-closed startup proof (wrap without identity must refuse)
+        run: |
+          if node bin/cli.mjs wrap --upstream http://localhost:9999; then
+            echo "FAIL-CLOSED VIOLATION: wrap started without identity configuration"; exit 1
+          else
+            echo "ok: wrap refused to start (exit $?)"
+          fi

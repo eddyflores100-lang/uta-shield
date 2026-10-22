@@ -87,10 +87,13 @@ export function identify(req, opts = {}) {
 
 // Per-tool authorization (layer 1b). ACL maps agent name → tools.
 //   acl = { "scraper-bot": ["search_contacts"], "ops-bot": ["*"] }
-// Agents absent from the ACL map are not restricted by it.
-export function agentAllowed(acl, agent, tool) {
+// Default (allow-unlisted): agents absent from the ACL map are not restricted
+// by it — pragmatic for fleets where only a few agents need constraining.
+// Strict mode (denyUnlisted: true): agents absent from the map are DENIED —
+// allow-list semantics, recommended when the ACL is the source of truth.
+export function agentAllowed(acl, agent, tool, { denyUnlisted = false } = {}) {
   if (!acl || typeof acl !== "object") return true;
-  if (!Object.prototype.hasOwnProperty.call(acl, agent)) return true;
+  if (!Object.prototype.hasOwnProperty.call(acl, agent)) return !denyUnlisted;
   const tools = acl[agent];
   if (!Array.isArray(tools) || tools.length === 0) return false;
   return tools.includes("*") || tools.includes(tool);
