@@ -6,7 +6,7 @@
 <title>uta-shield — the wall for the other side of MCP</title>
 <meta name="description" content="Every MCP gateway protects consumers. uta-shield protects the operator who publishes the server: identity, threat-intel gates, rate limits, DLP, x402 metering, audit. Zero dependencies.">
 <link rel="canonical" href="https://wall.utalabs.tech/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%230a0a0a'/%3E%3Ctext%20x='32'%20y='45'%20font-family='monospace'%20font-size='34'%20font-weight='700'%20fill='%23fafafa'%20text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%230a0a0a'/%3E%3Ctext%20x='32'%20y='45'%20font-family='monospace'%20font-size='34'%20font-weight='700'%20fill='%23d43c19'%20text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#fafafa">
 <meta property="og:type" content="website">
 <meta property="og:title" content="uta-shield — the wall for the other side of MCP">
@@ -22,12 +22,14 @@
   *,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
 
   /* ============================================================
-     PALETTE — 2 colors + 2 neutrals. Monochrome, like alethech.
-     Distinction is carried by WEIGHT, BORDERS and STRIKE — not color.
+     PALETTE — paper + ink, with a signal layer: red pen (the wall)
+     and green (allowed). Color carries meaning, never decoration.
      ============================================================ */
   :root{
     --bg:#fafafa;          /* paper */
-    --ink:#0a0a0a;         /* text + accent */
+    --ink:#0a0a0a;         /* text */
+    --signal:#d43c19;      /* red pen — the wall: blocks + highlights */
+    --pass:#0e7a49;        /* allowed traffic */
     --paper-edge:#efefef;
     --thread:#9a9a9a;      /* stitch + marginalia */
     --muted:#6b6b6b;       /* secondary text */
@@ -59,11 +61,12 @@
     position:absolute; top:1.75rem; right:2rem; font-size:.8rem;
     letter-spacing:.12em; color:var(--muted); z-index:3; text-transform:uppercase;
   }
-  .pagenum b{ color:var(--ink); font-weight:700; }
+  .pagenum b{ color:var(--signal); font-weight:700; }
 
   /* ---- typography ---- */
   .eyebrow{ font-size:clamp(.85rem,1.4vw,1rem); letter-spacing:.25em; text-transform:uppercase; color:var(--muted); margin-bottom:1.5rem; }
   .mega{ font-weight:800; font-size:clamp(3.2rem,13.5vw,10.5rem); line-height:.92; letter-spacing:-.05em; }
+  .mega::after{ content:""; display:inline-block; width:.11em; height:.11em; background:var(--signal); margin-left:.08em; }
   .giant{ font-weight:800; font-size:clamp(1.9rem,5vw,4.1rem); line-height:1.08; letter-spacing:-.03em; }
   .big{ font-weight:700; font-size:clamp(1.4rem,3vw,2.4rem); line-height:1.15; letter-spacing:-.02em; }
   .tagline{ font-size:clamp(1.1rem,2.4vw,1.7rem); font-weight:500; margin-top:1.5rem; }
@@ -75,14 +78,17 @@
   .stats{ margin-top:3rem; display:flex; flex-wrap:wrap; gap:.4rem 1.1rem; font-size:.95rem; letter-spacing:.04em; }
   .stats span{ white-space:nowrap; }
   .stats .sep{ color:var(--thread); }
+  .stats b{ color:var(--signal); font-weight:800; }
   .links{ margin-top:2.5rem; display:flex; flex-wrap:wrap; gap:.9rem; font-size:.82rem; letter-spacing:.1em; text-transform:uppercase; }
-  .links a{ color:var(--ink); text-decoration:none; border:2px solid var(--ink); padding:.6rem 1.1rem; transition:background .15s linear, color .15s linear; }
-  .links a:hover{ background:var(--ink); color:var(--bg); }
+  .links a{ color:var(--ink); text-decoration:none; border:2px solid var(--ink); padding:.6rem 1.1rem; transition:background .15s linear, color .15s linear, border-color .15s linear, transform .15s ease; }
+  .links a:hover{ background:var(--ink); color:var(--bg); transform:translateY(-2px); }
+  .links a.a--signal{ border-color:var(--signal); color:var(--signal); font-weight:700; }
+  .links a.a--signal:hover{ background:var(--signal); color:#fff; }
   .langbtn{
     border:2px solid var(--thread); background:transparent; cursor:pointer; font:inherit;
     color:var(--muted); padding:.6rem 1.1rem; font-size:.82rem; letter-spacing:.1em; text-transform:uppercase;
   }
-  .langbtn:hover{ border-color:var(--ink); color:var(--ink); }
+  .langbtn:hover{ border-color:var(--signal); color:var(--signal); }
 
   /* ---- section heads ---- */
   .section-head{ display:flex; align-items:baseline; gap:1rem; margin-bottom:2.5rem; flex-wrap:wrap; }
@@ -107,13 +113,17 @@
   .steps li:first-child{ border-top:2px solid var(--ink); }
   .steps li::before{ content:counter(step,decimal-leading-zero); flex:0 0 auto; font-weight:800; font-size:.95rem; letter-spacing:.04em; min-width:2.5rem; }
   .steps .st{ margin-left:auto; flex:0 0 auto; font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:.75rem; color:var(--muted); white-space:nowrap; }
-  .steps .st--ship{ color:var(--ink); border-bottom:3px solid var(--ink); }
+  .steps .st--ship{ color:var(--ink); border-bottom:3px solid var(--pass); }
+  .steps li::before{ transition:color .2s ease; }
+  .steps li:hover::before{ color:var(--signal); }
   .steps .st--hook{ border-bottom:3px dashed var(--thread); }
 
   /* ---- verdicts (firewall decisions) ---- */
   .verdicts{ display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
   .verdict{ border:2px solid var(--ink); padding:1.7rem 1.5rem; display:flex; flex-direction:column; gap:.85rem; background:var(--bg); }
-  .verdict--hot{ border-width:4px; }
+  .verdict--hot{ border-width:4px; border-color:var(--signal); }
+  .verdict--hot .v-name{ color:var(--signal); }
+  .verdict--allow .v-name{ color:var(--pass); }
   .verdict--no{ border-style:dashed; }
   .verdict .v-tag{ font-size:.75rem; letter-spacing:.18em; text-transform:uppercase; font-weight:700; color:var(--muted); }
   .verdict .v-name{ font-size:clamp(1.05rem,2.1vw,1.5rem); font-weight:800; line-height:1.15; word-break:break-word; }
@@ -124,7 +134,8 @@
   /* ---- license boxes ---- */
   .licenses{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
   .kbox{ border:2px solid var(--ink); padding:1.6rem 1.4rem; display:flex; flex-direction:column; gap:.45rem; background:var(--bg); }
-  .kbox--active{ border-width:4px; }
+  .kbox--active{ border-width:4px; border-color:var(--signal); }
+  .kbox--active .k-price{ color:var(--signal); }
   .kbox .k-tier{ font-size:.75rem; letter-spacing:.18em; text-transform:uppercase; font-weight:700; color:var(--muted); }
   .kbox .k-price{ font-size:clamp(1.5rem,2.6vw,2.2rem); font-weight:800; letter-spacing:-.02em; }
   .kbox .k-per{ font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
@@ -133,7 +144,7 @@
   .kbox li::before{ content:"+"; position:absolute; left:0; color:var(--ink); font-weight:800; }
 
   /* ---- audit sample (eq block) ---- */
-  .eq{ border-left:3px solid var(--ink); padding-left:1.2rem; margin-top:2.2rem; }
+  .eq{ border-left:3px solid var(--signal); padding-left:1.2rem; margin-top:2.2rem; }
   .eq code{ display:block; font-weight:700; font-size:clamp(.85rem,1.6vw,1.15rem); line-height:1.65; white-space:pre-wrap; word-break:break-word; }
   .eq .explain{ margin-top:.6rem; font-size:.88rem; color:var(--muted); }
 
@@ -141,13 +152,78 @@
   .guarantees{ list-style:none; display:flex; flex-direction:column; }
   .guarantees li{ padding:.95rem 0; border-bottom:1px dashed var(--thread); display:flex; align-items:baseline; gap:1rem; font-size:clamp(.95rem,1.5vw,1.15rem); line-height:1.45; }
   .guarantees li:first-child{ border-top:2px solid var(--ink); }
-  .guarantees .mark{ flex:0 0 auto; font-weight:800; min-width:1.5rem; }
+  .guarantees .mark{ flex:0 0 auto; font-weight:800; min-width:1.5rem; color:var(--signal); }
 
   /* ---- colophon ---- */
   .colophon{ display:flex; flex-direction:column; gap:.7rem; font-size:.85rem; }
   .colophon .row{ display:flex; gap:.6rem 2rem; flex-wrap:wrap; align-items:baseline; }
   .colophon a{ color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
   .colophon .lbl{ text-transform:uppercase; letter-spacing:.14em; font-size:.7rem; color:var(--muted); min-width:110px; }
+
+  /* ============================================================
+     SIGNAL LAYER — red pen + a live wall. Color carries meaning:
+     green = allowed · signal red = blocked / highlighted.
+     ============================================================ */
+  ::selection{ background:var(--signal); color:#fff; }
+  #progress{ position:fixed; top:0; left:0; height:3px; width:0; max-width:100%; background:var(--signal); z-index:60; }
+  .eyebrow::before{ content:""; display:inline-block; width:.55em; height:.55em; background:var(--signal); margin-right:.65em; }
+
+  /* scroll reveal */
+  .rv{ opacity:0; transform:translateY(14px); transition:opacity .55s ease, transform .55s ease; }
+  .rv.in{ opacity:1; transform:none; }
+
+  /* section heads — red underline draws in */
+  .section-head h2{ position:relative; padding-bottom:.4rem; }
+  .section-head h2::after{
+    content:""; position:absolute; left:0; bottom:0; width:2.4rem; height:4px;
+    background:var(--signal); transform:scaleX(0); transform-origin:left;
+    transition:transform .6s cubic-bezier(.2,.8,.2,1) .25s;
+  }
+  .section-head.in h2::after{ transform:scaleX(1); }
+
+  /* stamps — verdict names and prices land like rubber stamps on paper */
+  @keyframes stamp{
+    0%{ opacity:0; transform:scale(1.55) rotate(-4deg); }
+    62%{ opacity:1; transform:scale(.94) rotate(1.2deg); }
+    100%{ opacity:1; transform:scale(1) rotate(0); }
+  }
+  .verdict.in .v-name, .kbox.in .k-price{ animation:stamp .5s cubic-bezier(.2,1.2,.3,1) .12s both; }
+
+  /* hover lift on cards */
+  .verdict, .kbox{ transition:transform .2s ease, border-color .2s ease; }
+  .verdict:hover, .kbox:hover{ transform:translateY(-3px); }
+
+  /* ---- the wall (live firewall strip on the cover) ---- */
+  .wallbox{ margin-top:2.4rem; border:2px solid var(--ink); background:var(--bg); }
+  .wall-top{ display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.55rem .9rem; border-bottom:1px dashed var(--thread); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .wall-top .wl-wall{ color:var(--ink); font-weight:800; letter-spacing:.18em; transition:color .2s ease; white-space:nowrap; }
+  .wallbox.blocking .wl-wall{ color:var(--signal); }
+  .wall-strip{ position:relative; height:66px; overflow:hidden; }
+  .wall-gate{ position:absolute; top:7px; bottom:7px; left:50%; transform:translateX(-50%); display:flex; gap:5px; z-index:2; }
+  .wall-gate i{ width:7px; background:var(--ink); transition:background .16s ease; }
+  .wall-gate i.hit{ background:var(--signal); }
+  .pk{ position:absolute; left:0; width:7px; height:7px; background:var(--ink); opacity:.5; z-index:1; will-change:transform,opacity; }
+  .pk.go{ background:var(--pass); opacity:.95; }
+  .pk.hit{ background:var(--signal); opacity:1; }
+  .pk.fade{ opacity:0; }
+  .wall-score{ display:flex; gap:1.4rem; align-items:baseline; padding:.55rem .9rem; border-top:1px dashed var(--thread); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .wall-score b{ font-weight:800; }
+  .ws-allow b{ color:var(--pass); }
+  .ws-block b{ color:var(--signal); }
+  .ws-live{ margin-left:auto; }
+
+  @media(max-width:760px){
+    .wall-strip{ height:54px; }
+    .wall-top{ font-size:.6rem; padding:.5rem .7rem; }
+    .wall-score{ font-size:.6rem; padding:.5rem .7rem; gap:1rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ animation:none!important; transition:none!important; }
+    .rv{ opacity:1; transform:none; }
+    .section-head h2::after{ transform:scaleX(1); }
+    .wallbox{ display:none; }
+  }
 
   /* ---- i18n ---- */
   html[data-lang="es"] .rich-en{ display:none; }
@@ -172,18 +248,31 @@
     <div class="eyebrow">AliceLabs LLC · UTA stack · v0.1.0 shipped</div>
     <h1 class="mega">UTA<br>SHIELD</h1>
     <p class="tagline" data-en="The wall for the other side of MCP." data-es="El muro para el otro lado de MCP.">The wall for the other side of MCP.</p>
+    <div class="wallbox" id="wallbox" aria-hidden="true">
+      <div class="wall-top">
+        <span data-en="agent traffic" data-es="tráfico de agentes">agent traffic</span>
+        <span class="wl-wall">uta-shield</span>
+        <span data-en="your mcp server" data-es="tu servidor mcp">your mcp server</span>
+      </div>
+      <div class="wall-strip"><div class="wall-gate"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="wall-score">
+        <span class="ws-allow"><b id="ws-allow">0</b> <span data-en="allowed" data-es="permitidas">allowed</span></span>
+        <span class="ws-block"><b id="ws-block">0</b> <span data-en="blocked" data-es="bloqueadas">blocked</span></span>
+        <span class="ws-live" data-en="live demo — watch the wall decide" data-es="demo en vivo — mira al muro decidir">live demo — watch the wall decide</span>
+      </div>
+    </div>
     <p class="lede rich-en">Lasso, Mintive, Obot and agentgateway protect the <b>consumer</b> — the company whose agents call third-party servers. Nobody protects the <b>operator</b>: the SaaS that publishes an MCP server and exposes its database to every anonymous agent on the internet. <b>uta-shield is the mirror side.</b> Wrap your server once — identity gates, threat-intel blocking, rate limits, DLP, x402-ready metering and a full audit trail. Zero code changes. Zero dependencies.</p>
     <p class="lede rich-es">Lasso, Mintive, Obot y agentgateway protegen al <b>consumidor</b> — la empresa cuyos agentes llaman a servidores de terceros. Nadie protege al <b>operador</b>: el SaaS que publica un servidor MCP y expone su base de datos a cada agente anónimo de internet. <b>uta-shield es el lado espejo.</b> Envuelve tu servidor una vez — gates de identidad, bloqueo de threat-intel, rate limits, DLP, metering listo para x402 y auditoría completa. Cero cambios de código. Cero dependencias.</p>
     <div class="stats">
-      <span>28/28 tests</span><span class="sep">·</span>
-      <span>0 dependencies</span><span class="sep">·</span>
-      <span>19.8 kB</span><span class="sep">·</span>
-      <span>23 live IOCs</span><span class="sep">·</span>
-      <span>~12 h takedown</span><span class="sep">·</span>
-      <span>2 min install</span>
+      <span><b>28/28</b> tests</span><span class="sep">·</span>
+      <span><b>0</b> dependencies</span><span class="sep">·</span>
+      <span><b>19.8 kB</b></span><span class="sep">·</span>
+      <span><b>23</b> live IOCs</span><span class="sep">·</span>
+      <span><b>~12 h</b> takedown</span><span class="sep">·</span>
+      <span><b>2 min</b> install</span>
     </div>
     <div class="links">
-      <a href="https://github.com/eddyflores100-lang/uta-shield">GitHub →</a>
+      <a class="a--signal" href="https://github.com/eddyflores100-lang/uta-shield">GitHub →</a>
       <a href="https://github.com/eddyflores100-lang/uta-shield/blob/main/LICENSE">License →</a>
       <a href="https://github.com/eddyflores100-lang/taikotalent-phishing-iocs">Case repo →</a>
       <a href="https://utalabs.tech">utalabs.tech →</a>
@@ -280,7 +369,7 @@
       </div>
     </div>
     <div class="verdicts" style="margin-top:2.5rem">
-      <div class="verdict">
+      <div class="verdict verdict--allow">
         <div class="v-tag">verdict 01</div>
         <div class="v-name">ALLOW</div>
         <div class="v-desc" data-en="A legitimate client calls search_contacts. Call passes, 23 ms, metered to the ledger." data-es="Un cliente legítimo llama search_contacts. La llamada pasa, 23 ms, facturada al ledger.">A legitimate client calls search_contacts. Call passes, 23 ms, metered to the ledger.</div>
@@ -459,6 +548,7 @@
       if(v!==null && !el.classList.contains('rich-en') && !el.classList.contains('rich-es')) el.innerHTML=v;
     });
     try{localStorage.setItem('utas-lang',l)}catch(e){}
+    document.querySelectorAll('.rich-en .rv,.rich-es .rv,.rv.rich-en,.rv.rich-es').forEach(function(e){ e.classList.add('in'); });
   }
   (function(){
     let l='en';
@@ -467,6 +557,97 @@
       l=q||(localStorage.getItem('utas-lang')||((navigator.language||'').startsWith('es')?'es':'en'));
     }catch(e){}
     if(l&&l!=='en')setLang(l);
+  })();
+
+  /* ---- scroll reveal ---- */
+  (function(){
+    var reduced=false; try{ reduced=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(reduced||!('IntersectionObserver' in window)) return;
+    var els=document.querySelectorAll('.section-head,.eyebrow,.mega,.tagline,.lede,.stats span,.links a,.links button,.prose-stack,.verdict,.kbox,.steps li,.guarantees li,.marginalia,.eq,.wallbox,.page--footer .big,.colophon .row,.page__inner>.small');
+    var counts=new Map();
+    els.forEach(function(el){
+      if(el.classList.contains('rv')) return;
+      el.classList.add('rv');
+      var p=el.parentElement, i=counts.get(p)||0; counts.set(p,i+1);
+      if(i) el.style.transitionDelay=Math.min(i*55,440)+'ms';
+    });
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting) return;
+        var t=en.target;
+        t.classList.add('in');
+        io.unobserve(t);
+        setTimeout(function(){ t.classList.remove('rv'); t.style.transitionDelay=''; },1150);
+      });
+    },{threshold:.12, rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+
+  /* ---- the wall: live firewall strip ---- */
+  (function(){
+    var box=document.getElementById('wallbox'); if(!box) return;
+    var strip=box.querySelector('.wall-strip');
+    var bars=box.querySelectorAll('.wall-gate i');
+    var elA=document.getElementById('ws-allow'), elB=document.getElementById('ws-block');
+    var reduced=false; try{ reduced=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(reduced) return;
+    var allow=0, denied=0, active=true;
+    var GATE_W=bars.length*7+(bars.length-1)*5;
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){ active=es[0].isIntersecting; },{threshold:.05}).observe(strip);
+    }
+    function spawn(){
+      if(document.hidden||!active) return;
+      if(strip.querySelectorAll('.pk').length>10) return;
+      var w=strip.clientWidth, h=strip.clientHeight;
+      var p=document.createElement('i'); p.className='pk';
+      p.style.top=(6+Math.random()*(h-20))+'px';
+      strip.appendChild(p);
+      var leg1=Math.max(40, w/2-GATE_W/2-4);
+      var dur1=Math.max(800, leg1/0.11);
+      p.getBoundingClientRect();
+      p.style.transition='transform '+dur1+'ms linear, opacity .3s ease, background .16s ease';
+      p.style.transform='translateX('+leg1+'px)';
+      p.addEventListener('transitionend', function te(ev){
+        if(ev.propertyName!=='transform') return;
+        p.removeEventListener('transitionend',te);
+        if(Math.random()<0.26){
+          denied++; elB.textContent=denied;
+          p.classList.add('hit');
+          var bar=bars[Math.floor(Math.random()*bars.length)];
+          bar.classList.add('hit'); box.classList.add('blocking');
+          setTimeout(function(){ bar.classList.remove('hit'); box.classList.remove('blocking'); },360);
+          setTimeout(function(){ p.classList.add('fade'); p.style.transform='translateX('+leg1+'px) translateY(9px)'; },240);
+          setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); },620);
+        }else{
+          allow++; elA.textContent=allow;
+          p.classList.add('go');
+          var dx=w-leg1+24, dur2=Math.max(900, dx/0.11);
+          p.style.transition='transform '+dur2+'ms linear, opacity .3s ease, background .16s ease';
+          p.style.transform='translateX('+(w+24)+'px)';
+          setTimeout(function(){ p.classList.add('fade'); }, Math.max(200,dur2-280));
+          setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, dur2+40);
+        }
+      });
+    }
+    setTimeout(function loop(){ spawn(); setTimeout(loop, 360+Math.random()*420); }, 450);
+  })();
+
+  /* ---- reading progress (red pen line) ---- */
+  (function(){
+    var bar=document.createElement('div'); bar.id='progress'; document.body.appendChild(bar);
+    var tick=false;
+    function upd(){
+      tick=false;
+      var d=document.documentElement;
+      var max=d.scrollHeight-window.innerHeight;
+      var r=(max>0)?((window.pageYOffset||d.scrollTop||0)/max):0;
+      bar.style.width=(r*100)+'%';
+    }
+    window.addEventListener('scroll',function(){
+      if(!tick){ tick=true; requestAnimationFrame(upd); }
+    },{passive:true});
+    upd();
   })();
 </script>
 </body>
