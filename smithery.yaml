@@ -1,0 +1,11 @@
+# Smithery configuration — https://smithery.ai/docs/config#smitheryyaml
+# uta-shield ships a bundled PhishGuard threat-intel MCP server on stdio
+# (newline-delimited JSON-RPC 2.0, protocol 2025-06-18).
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |-
+    (config) => ({ "command": "npx", "args": ["uta-shield", "mcp"] })
