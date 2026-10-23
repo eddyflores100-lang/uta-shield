@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.eddyflores100-lang/uta-shield",
+  "description": "Provider-side firewall for MCP servers with a bundled PhishGuard threat-intel MCP server: agent identity gates, IOC/campaign blocking on arguments and responses, per-agent rate limits, DLP masking, x402-ready metering and fail-closed JSONL audit. Zero dependencies.",
+  "title": "uta-shield",
+  "version": "0.2.2",
+  "websiteUrl": "https://wall.utalabs.tech",
+  "repository": {
+    "url": "https://github.com/eddyflores100-lang/uta-shield",
+    "source": "github"
+  },
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "agentCard": "https://wall.utalabs.tech/.well-known/agent.json",
+      "x402Support": true
+    }
+  }
+}
