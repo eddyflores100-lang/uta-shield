@@ -5,6 +5,15 @@
   "title": "uta-shield",
   "version": "0.2.2",
   "websiteUrl": "https://wall.utalabs.tech",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "uta-shield",
+      "version": "0.2.2",
+      "transport": { "type": "stdio" }
+    }
+  ],
   "repository": {
     "url": "https://github.com/eddyflores100-lang/uta-shield",
     "source": "github"
@@ -12,7 +21,8 @@
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {
       "agentCard": "https://wall.utalabs.tech/.well-known/agent.json",
-      "x402Support": true
+      "x402Support": true,
+      "x402PaymentReceiver": "0x39Dddf5aEdb58A559CF195fB8bdF23F0604Bf5Ee"
     }
   }
 }

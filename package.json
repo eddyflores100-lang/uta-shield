@@ -4,6 +4,7 @@
   "description": "Provider-side firewall for MCP servers + bundled PhishGuard threat-intel MCP server. Zero dependencies, zero supply-chain surface.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "files": ["bin/", "src/", "feed/", "test/", "demo/", "server.json", "smithery.yaml", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },
   "bin": { "uta-shield": "./bin/cli.mjs" },
   "main": "./src/index.mjs",
