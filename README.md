@@ -120,7 +120,7 @@ Agents get the intel as tools: `lookup_ioc(value)`, `check_url(url)` (feed + adv
 | S7 — managed feed subscription | updated campaign feed + webhook alerts + YARA rules | **$50/mes** (free for first 100 ATC-holding agents) |
 | S6 — Shield assessment + piloto | audit of your MCP server + deployed piloto (identity+intel+audit) + report | **$1,000 setup + $100/mes/server** |
 
-Contact: AliceLabs LLC — support@alicelabs.site
+Contact: AliceLabs LLC — contacto@alicelabs.site
 
 ## Test (reproducible)
 
@@ -155,4 +155,4 @@ Test results for v0.2.2: see [EVIDENCE.md](EVIDENCE.md) (command, Node version, 
 
 - Additive. `--acl-deny-unlisted` enables opt-in strict ACL (allow-list semantics); the CLI refuses to start with that flag but no `--acl-file` (fail-closed). New audit verdicts: `BODY_TOO_LARGE` (both 413 paths — v0.2.1 added `AUDIT_DISABLED`/`AUDIT_DENIED`). Public CI added — nothing else changes for existing operators.
 
-Licensed for use — see [LICENSE](LICENSE) (license for use / licencia de uso). © 2026 AliceLabs LLC. Commercial exceptions (white label, OEM, redistribution, managed service): support@alicelabs.site
+Licensed for use — see [LICENSE](LICENSE) (license for use / licencia de uso). © 2026 AliceLabs LLC. Commercial exceptions (white label, OEM, redistribution, managed service): contacto@alicelabs.site
