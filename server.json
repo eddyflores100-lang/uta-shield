@@ -3,15 +3,17 @@
   "name": "io.github.eddyflores100-lang/uta-shield",
   "description": "Provider-side firewall for MCP servers: identity, threat-intel, rate limits, DLP, metering, audit.",
   "title": "uta-shield",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "websiteUrl": "https://wall.utalabs.tech",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "uta-shield",
-      "version": "0.2.3",
-      "transport": { "type": "stdio" }
+      "version": "0.2.4",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ],
   "repository": {

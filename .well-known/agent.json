@@ -1,7 +1,7 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "uta-shield",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Provider-side firewall for MCP servers with a bundled PhishGuard threat-intel MCP server. Identity gates, IOC/campaign blocking on args and responses, per-agent rate limits, DLP masking, x402-ready metering and fail-closed JSONL audit. Zero dependencies, 58 kB, 85/85 tests. By AliceLabs LLC.",
   "endpoints": [
     {
@@ -19,11 +19,11 @@
   "services": [
     {
       "name": "MCP server security audit — written report + hardening roadmap",
-      "endpoint": "mailto:support@alicelabs.energy"
+      "endpoint": "mailto:support@alicelabs.site"
     },
     {
       "name": "Deployed pilot — identity + intel + audit live on your MCP server",
-      "endpoint": "mailto:support@alicelabs.energy"
+      "endpoint": "mailto:support@alicelabs.site"
     },
     {
       "name": "x402 payment receiver (EVM — Base and compatible chains)",
