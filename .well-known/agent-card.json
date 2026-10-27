@@ -1,0 +1,205 @@
+{
+  "$schema": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "uta-shield",
+  "version": "0.2.4",
+  "description": "Provider-side firewall for MCP servers with bundled PhishGuard threat-intel. HMAC-SHA256 verified identity, IOC/campaign blocking on args and responses, per-agent rate limits, DLP masking, x402-ready metering, fail-closed JSONL audit. Zero dependencies, 58 kB, 85/85 tests. By AliceLabs LLC.",
+  "publisher": {
+    "name": "AliceLabs LLC",
+    "contact": "support@alicelabs.site",
+    "website": "https://wall.utalabs.tech"
+  },
+
+  "endpoints": [
+    {
+      "name": "PhishGuard MCP (stdio)",
+      "endpoint": "npx uta-shield mcp",
+      "transport": "MCP-stdio: newline-delimited JSON-RPC 2.0, protocol 2025-06-18"
+    },
+    {
+      "name": "PhishGuard MCP (HTTP+SSE) — agent-to-agent remote",
+      "endpoint": "https://wall.utalabs.tech/mcp",
+      "transport": "MCP-http: StreamableHTTP",
+      "x402_enabled": true
+    },
+    {
+      "name": "Project site and live /audit example",
+      "endpoint": "https://wall.utalabs.tech",
+      "transport": "WEB"
+    }
+  ],
+
+  "capabilities": [
+    {
+      "name": "lookup_ioc",
+      "description": "Look up an Indicator of Compromise in the PhishGuard feed. Returns campaign context, MITRE ATT&CK techniques, and reputation verdict.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "value": {"type": "string", "description": "The indicator to look up (domain, URL, IP, SHA-256, email address, mutex, filepath)"},
+          "kind": {"type": "string", "enum": ["domain","url","ip","sha256","email-addr","filename","filepath","mutex/process-name"], "description": "Optional explicit type hint; auto-detected if omitted"}
+        },
+        "required": ["value"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "match": {"type": "boolean"},
+          "campaign": {"type": "string", "description": "e.g. taikotalent-2026-10"},
+          "context": {"type": "string"},
+          "mitre": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "pricing": {
+        "model": "per-call",
+        "amount": "0.0001",
+        "currency": "USDC",
+        "chain": "base",
+        "free_tier_per_day": 100,
+        "settlement": "x402"
+      }
+    },
+    {
+      "name": "check_url",
+      "description": "Check a URL against the PhishGuard feed. Resolves redirects and expands shorteners before matching.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "format": "uri"}
+        },
+        "required": ["url"]
+      },
+      "pricing": {
+        "model": "per-call",
+        "amount": "0.0002",
+        "currency": "USDC",
+        "chain": "base",
+        "free_tier_per_day": 50,
+        "settlement": "x402"
+      }
+    },
+    {
+      "name": "screen_text",
+      "description": "Screen free-text content (email body, chat message, web page, tool output) for indicators of compromise and brand impersonation. Returns matched indicators and a recommended action.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "text": {"type": "string", "maxLength": 65536}
+        },
+        "required": ["text"]
+      },
+      "pricing": {
+        "model": "per-call",
+        "amount": "0.001",
+        "currency": "USDC",
+        "chain": "base",
+        "free_tier_per_day": 25,
+        "settlement": "x402"
+      }
+    },
+    {
+      "name": "shield_request",
+      "description": "Wrap an MCP call through the uta-shield firewall. The caller provides signed identity (HMAC-SHA256), the call payload, and the upstream target. uta-shield enforces ACL, rate limits, DLP, and threat-intel blocking on the request AND on the upstream response, then returns the result with an audit trail entry.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "agent_name": {"type": "string", "description": "Pre-registered agent name (assigned by operator during onboarding)"},
+          "signature": {"type": "string", "description": "Hex HMAC_SHA256(secret, `${agent_name}|${timestamp}|${sha256(rawBody)}`)"},
+          "timestamp_ms": {"type": "integer", "description": "Milliseconds since epoch; ±5 min window"},
+          "target_url": {"type": "string", "format": "uri"},
+          "method": {"type": "string", "enum": ["GET","POST","PATCH","PUT","DELETE"]},
+          "body": {"type": "string", "description": "Raw request body (the signature is computed over this)"},
+          "tool_name": {"type": "string", "description": "The MCP tool name being invoked upstream (for ACL)"}
+        },
+        "required": ["agent_name", "signature", "timestamp_ms", "target_url", "method"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "verdict": {"type": "string", "enum": ["ALLOW_VERIFIED","REJECT_ANON","REJECT_AUTH","REJECT_FORBIDDEN","BLOCK_INTEL","OUT_REDACTED","OUT_BLOCKED","RATE_LIMITED"]},
+          "upstream_status": {"type": "integer"},
+          "upstream_body": {"type": "string"},
+          "audit_id": {"type": "string", "description": "Audit trail entry ID (fail-closed JSONL)"}
+        }
+      },
+      "pricing": {
+        "model": "per-call",
+        "amount": "0.005",
+        "currency": "USDC",
+        "chain": "base",
+        "free_tier_per_day": 10,
+        "settlement": "x402"
+      }
+    }
+  ],
+
+  "identity": {
+    "scheme": "HMAC-SHA256",
+    "header_x_agent_name": "x-agent-name",
+    "header_x_agent_timestamp_ms": "x-agent-timestamp",
+    "header_x_agent_signature": "x-agent-signature",
+    "signature_format": "HMAC_SHA256(secret, `${agent_name}|${timestamp_ms}|${sha256(rawBody)}`)",
+    "window_minutes": 5,
+    "rotation": "Operator-issued secret per agent; rotated via admin endpoint",
+    "verification_docs": "https://wall.utalabs.tech/identity"
+  },
+
+  "billing": {
+    "settlement_protocol": "x402 (HTTP 402 Payment Required)",
+    "accepted_currencies": ["USDC", "USDC.e"],
+    "chains": [
+      {"name": "base", "chain_id": 8453, "receiver_address": "0x39Dddf5aEdb58A559CF195fB8bdF23F0604Bf5Ee"},
+      {"name": "base-sepolia", "chain_id": 84532, "receiver_address": "0x39Dddf5aEdb58A559CF195fB8bdF23F0604Bf5Ee", "testnet": true}
+    ],
+    "free_tier_per_day_per_agent": {
+      "lookup_ioc": 100,
+      "check_url": 50,
+      "screen_text": 25,
+      "shield_request": 10
+    },
+    "barter_accepted": true,
+    "barter_terms": {
+      "compute_hours_per_USDC_equivalent": "see barter-quote endpoint",
+      "barter_endpoint": "POST /barter/quote  →  { provided_capability, requested_capability, hours_offered, hours_requested, settlement: 'compute-credit' }",
+      "barter_settlement": "off-chain bilateral credit memo (no money crosses borders); the receiver-side operator credits hours on the giver's account",
+      "barter_audit_trail": "JSONL, same fail-closed log as billing"
+    }
+  },
+
+  "a2a": {
+    "protocol": "A2A v0.3 (Google)",
+    "capability_card_url": "https://wall.utalabs.tech/.well-known/agent-card.json",
+    "task_send_endpoint": "POST /a2a/tasks/send",
+    "task_get_endpoint": "GET /a2a/tasks/{id}",
+    "supports_streaming": true,
+    "supports_push_notifications": true,
+    "agent_skills": [
+      {"name": "phishguard-lookup", "description": "IOC lookup against the PhishGuard feed"},
+      {"name": "phishguard-url", "description": "URL reputation check with redirect expansion"},
+      {"name": "phishguard-screen", "description": "Free-text screening for IoCs and brand impersonation"},
+      {"name": "shield-proxy", "description": "Wrap an MCP call with identity, ACL, DLP and threat-intel gates"}
+    ]
+  },
+
+  "registrations": [],
+  "services": [
+    {
+      "name": "MCP server security audit — written report + hardening roadmap",
+      "endpoint": "mailto:support@alicelabs.site"
+    },
+    {
+      "name": "Deployed pilot — identity + intel + audit live on your MCP server",
+      "endpoint": "mailto:support@alicelabs.site"
+    },
+    {
+      "name": "x402 payment receiver (EVM — Base and compatible chains)",
+      "endpoint": "0x39Dddf5aEdb58A559CF195fB8bdF23F0604Bf5Ee"
+    },
+    {
+      "name": "Barter credit memo (no cross-border money) — compute-hours in exchange for uta-shield calls",
+      "endpoint": "mailto:support@alicelabs.site?subject=barter",
+      "terms_url": "https://wall.utalabs.tech/barter-terms"
+    }
+  ],
+
+  "x402Support": true
+}
