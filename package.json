@@ -1,13 +1,27 @@
 {
   "name": "uta-shield",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "mcpName": "io.github.eddyflores100-lang/uta-shield",
-  "description": "Provider-side firewall for MCP servers + bundled PhishGuard threat-intel MCP server. Zero dependencies, zero supply-chain surface.",
+  "description": "Provider-side MCP firewall: identity, threat-intel, barter, rate limits, DLP, audit.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
-  "files": ["bin/", "src/", "feed/", "test/", "demo/", "server.json", "smithery.yaml", "README.md", "LICENSE"],
-  "engines": { "node": ">=18" },
-  "bin": { "uta-shield": "./bin/cli.mjs" },
+  "files": [
+    "bin/",
+    "src/",
+    "feed/",
+    "test/",
+    "demo/",
+    "server.json",
+    "smithery.yaml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "uta-shield": "./bin/cli.mjs"
+  },
   "main": "./src/index.mjs",
   "exports": {
     ".": "./src/index.mjs",
@@ -21,8 +35,17 @@
     "verify-feed": "node bin/cli.mjs verify-feed feed/iocs.json"
   },
   "keywords": [
-    "mcp", "modelcontextprotocol", "firewall", "security", "threat-intel",
-    "phishing", "ioc", "ai-agents", "x402", "uta", "alicelabs"
+    "mcp",
+    "modelcontextprotocol",
+    "firewall",
+    "security",
+    "threat-intel",
+    "phishing",
+    "ioc",
+    "ai-agents",
+    "x402",
+    "uta",
+    "alicelabs"
   ],
   "author": "AliceLabs LLC <support@alicelabs.site>",
   "repository": {
